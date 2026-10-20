@@ -34,6 +34,7 @@ const recommendationSchema = new Schema(
     },
     feedbackHelpful: { type: Boolean, default: null },
     dismissedAt: { type: Date },
+    completedAt: { type: Date },
   },
   { timestamps: true },
 );

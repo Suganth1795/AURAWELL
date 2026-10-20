@@ -22,7 +22,11 @@ const gameSessionSchema = new Schema(
 
 gameSessionSchema.index({ userId: 1, playedAt: -1 });
 gameSessionSchema.index({ userId: 1, gameCode: 1, playedAt: -1 });
-gameSessionSchema.index({ userId: 1, idempotencyKey: 1 }, { unique: true, sparse: true });
+// Partial index so only sessions that carry an idempotency key must be unique.
+gameSessionSchema.index(
+  { userId: 1, idempotencyKey: 1 },
+  { unique: true, partialFilterExpression: { idempotencyKey: { $type: 'string' } } },
+);
 
 export type GameSessionDoc = HydratedDocument<InferSchemaType<typeof gameSessionSchema>>;
 

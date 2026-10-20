@@ -5,6 +5,7 @@ import { createSessionMiddleware } from '../config/session.js';
 import { authRouter } from './auth.routes.js';
 import { usersRouter } from './users.routes.js';
 import { assessmentsRouter } from './assessments.routes.js';
+import { gamesRouter } from './games.routes.js';
 
 export const apiRouter = Router();
 
@@ -22,6 +23,7 @@ apiRouter.get('/csrf', (_req, res) => {
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/users', usersRouter);
 apiRouter.use('/assessments', assessmentsRouter);
+apiRouter.use('/games', gamesRouter);
 
 // Feature routers are mounted here as they are implemented:
-// /games, /wellness, /recommendations, /ai, /analytics, /privacy
+// /wellness, /recommendations, /ai, /analytics, /privacy

@@ -14,6 +14,7 @@ import { AssessmentsPage } from '@/pages/AssessmentsPage';
 import { AssessmentRunnerPage } from '@/pages/AssessmentRunnerPage';
 import { AssessmentResultPage } from '@/pages/AssessmentResultPage';
 import { GamesPage } from '@/pages/GamesPage';
+import { GameRunnerPage } from '@/pages/GameRunnerPage';
 import { MoodPage } from '@/pages/MoodPage';
 import { JournalPage } from '@/pages/JournalPage';
 import { SleepPage } from '@/pages/SleepPage';
@@ -73,6 +74,7 @@ export function AppRoutes(): React.JSX.Element {
         <Route path="/assessments/results/:id" element={<AssessmentResultPage />} />
         <Route path="/assessments/:code" element={<AssessmentRunnerPage />} />
         <Route path="/games" element={<GamesPage />} />
+        <Route path="/games/:code" element={<GameRunnerPage />} />
         <Route path="/mood" element={<MoodPage />} />
         <Route path="/journal" element={<JournalPage />} />
         <Route path="/sleep" element={<SleepPage />} />
