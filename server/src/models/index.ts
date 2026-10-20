@@ -1,0 +1,14 @@
+export { User, toUserPublicDto, type UserDoc, type UserPublicDto } from './User.js';
+export { ConsentRecord, CONSENT_TYPES, type ConsentType, type ConsentRecordDoc } from './ConsentRecord.js';
+export { Assessment, type AssessmentDoc, type AssessmentDefinition, type AssessmentQuestion } from './Assessment.js';
+export { AssessmentResponse, type AssessmentResponseDoc } from './AssessmentResponse.js';
+export { MoodEntry, MOOD_VALUES, MOOD_SCORE, type MoodValue, type MoodEntryDoc } from './MoodEntry.js';
+export { JournalEntry, type JournalEntryDoc } from './JournalEntry.js';
+export { SleepEntry, type SleepEntryDoc } from './SleepEntry.js';
+export { ActivityEntry, ACTIVITY_TYPES, type ActivityEntryDoc } from './ActivityEntry.js';
+export { Habit, HabitEntry, type HabitDoc, type HabitEntryDoc } from './Habit.js';
+export { GameSession, type GameSessionDoc } from './GameSession.js';
+export { Recommendation, RECOMMENDATION_KINDS, type RecommendationDoc } from './Recommendation.js';
+export { Goal, type GoalDoc } from './Goal.js';
+export { ChatSession, ChatMessage, type ChatSessionDoc, type ChatMessageDoc } from './Chat.js';
+export { Notification, type NotificationDoc } from './Notification.js';
