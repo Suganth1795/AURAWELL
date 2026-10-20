@@ -5,7 +5,7 @@ export { AssessmentResponse, type AssessmentResponseDoc } from './AssessmentResp
 export { MoodEntry, MOOD_VALUES, MOOD_SCORE, type MoodValue, type MoodEntryDoc } from './MoodEntry.js';
 export { JournalEntry, type JournalEntryDoc } from './JournalEntry.js';
 export { SleepEntry, type SleepEntryDoc } from './SleepEntry.js';
-export { ActivityEntry, ACTIVITY_TYPES, type ActivityEntryDoc } from './ActivityEntry.js';
+export { ActivityEntry, ACTIVITY_TYPES, type ActivityType, type ActivityEntryDoc } from './ActivityEntry.js';
 export { Habit, HabitEntry, type HabitDoc, type HabitEntryDoc } from './Habit.js';
 export { GameSession, type GameSessionDoc } from './GameSession.js';
 export { Recommendation, RECOMMENDATION_KINDS, type RecommendationDoc } from './Recommendation.js';

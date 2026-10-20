@@ -65,6 +65,15 @@ export class TestClient {
     );
   }
 
+  async delete(path: string): Promise<Res> {
+    return this.absorb(
+      await request(this.app)
+        .delete(path)
+        .set('Cookie', this.cookieHeader())
+        .set('X-CSRF-Token', this.cookies.get('aurawell_csrf') ?? ''),
+    );
+  }
+
   /** Issues a safe request so the server issues a CSRF cookie. */
   async bootstrapCsrf(): Promise<void> {
     await this.get('/api/csrf');

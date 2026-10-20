@@ -6,6 +6,8 @@ import { authRouter } from './auth.routes.js';
 import { usersRouter } from './users.routes.js';
 import { assessmentsRouter } from './assessments.routes.js';
 import { gamesRouter } from './games.routes.js';
+import { wellnessRouter } from './wellness.routes.js';
+import { recommendationsRouter } from './recommendations.routes.js';
 
 export const apiRouter = Router();
 
@@ -24,6 +26,8 @@ apiRouter.use('/auth', authRouter);
 apiRouter.use('/users', usersRouter);
 apiRouter.use('/assessments', assessmentsRouter);
 apiRouter.use('/games', gamesRouter);
+apiRouter.use('/wellness', wellnessRouter);
+apiRouter.use('/recommendations', recommendationsRouter);
 
 // Feature routers are mounted here as they are implemented:
-// /wellness, /recommendations, /ai, /analytics, /privacy
+// /ai, /analytics, /privacy

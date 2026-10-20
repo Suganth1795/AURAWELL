@@ -12,6 +12,8 @@ export const ACTIVITY_TYPES = [
   'other',
 ] as const;
 
+export type ActivityType = (typeof ACTIVITY_TYPES)[number];
+
 const activityEntrySchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
