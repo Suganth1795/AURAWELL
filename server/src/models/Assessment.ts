@@ -43,6 +43,8 @@ const questionSchema = new Schema(
     responseType: { type: String, enum: RESPONSE_TYPES, required: true },
     required: { type: Boolean, default: true },
     maxSelections: { type: Number },
+    /** Value substituted when an unanswered optional question is omitted. */
+    default: { type: Schema.Types.Mixed, default: undefined },
     ratingMin: { type: Number, default: 1 },
     ratingMax: { type: Number, default: 5 },
     ratingLabels: { type: [String] },
@@ -54,8 +56,29 @@ const questionSchema = new Schema(
       older_adult: { type: ageVariantSchema, default: undefined },
     },
     conditional: {
-      dependsOnQuestionId: { type: String },
-      showWhenOptionIds: { type: [String] },
+      type: new Schema(
+        {
+          dependsOnQuestionId: { type: String, required: true },
+          showWhenOptionIds: { type: [String], default: [] },
+        },
+        { _id: false },
+      ),
+      default: undefined,
+    },
+    /** For rating questions: transparent mapping from value ranges to tags. */
+    ratingRules: {
+      type: [
+        new Schema(
+          {
+            min: { type: Number },
+            max: { type: Number },
+            tags: { type: [String], default: [] },
+            weight: { type: Number, default: 1 },
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
     },
     tags: { type: [String], default: [] },
   },

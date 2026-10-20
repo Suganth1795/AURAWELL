@@ -11,6 +11,8 @@ import { AppShell } from '@/layouts/AppShell';
 import { RequireAuth } from '@/routes/RequireAuth';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { AssessmentsPage } from '@/pages/AssessmentsPage';
+import { AssessmentRunnerPage } from '@/pages/AssessmentRunnerPage';
+import { AssessmentResultPage } from '@/pages/AssessmentResultPage';
 import { GamesPage } from '@/pages/GamesPage';
 import { MoodPage } from '@/pages/MoodPage';
 import { JournalPage } from '@/pages/JournalPage';
@@ -68,6 +70,8 @@ export function AppRoutes(): React.JSX.Element {
       >
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/assessments" element={<AssessmentsPage />} />
+        <Route path="/assessments/results/:id" element={<AssessmentResultPage />} />
+        <Route path="/assessments/:code" element={<AssessmentRunnerPage />} />
         <Route path="/games" element={<GamesPage />} />
         <Route path="/mood" element={<MoodPage />} />
         <Route path="/journal" element={<JournalPage />} />

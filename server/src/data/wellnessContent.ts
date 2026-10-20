@@ -1,0 +1,466 @@
+import type { AgeGroup } from '../utils/ageGroup.js';
+
+export type ContentKind =
+  | 'game'
+  | 'habit'
+  | 'journal_prompt'
+  | 'sleep_routine'
+  | 'activity'
+  | 'reflection'
+  | 'breathing'
+  | 'goal';
+
+export interface WellnessContentItem {
+  code: string;
+  kind: ContentKind;
+  title: string;
+  description: string;
+  ageGroups: AgeGroup[];
+  estimatedMinutes: number;
+  /** Structured details the client uses to run the activity. */
+  details: Record<string, unknown>;
+  tags: string[];
+}
+
+/**
+ * Central catalogue of wellness activities referenced by the assessment-to-action
+ * engine and the recommendation engine. Game codes are implemented by MindPlay
+ * (Phase 4); other kinds are handled by their feature pages.
+ */
+export const WELLNESS_CONTENT: WellnessContentItem[] = [
+  // ---- Games (MindPlay) ----
+  {
+    code: 'memory-garden',
+    kind: 'game',
+    title: 'Memory Garden',
+    description: 'Watch a sequence bloom, then plant it back in the same order.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 5,
+    details: { skill: 'memory' },
+    tags: ['memory', 'focus'],
+  },
+  {
+    code: 'focus-quest',
+    kind: 'game',
+    title: 'Focus Quest',
+    description: 'Spot the target objects hiding among distractors before time runs out.',
+    ageGroups: ['child', 'teen', 'adult'],
+    estimatedMinutes: 4,
+    details: { skill: 'attention' },
+    tags: ['focus', 'attention'],
+  },
+  {
+    code: 'emotion-detective',
+    kind: 'game',
+    title: 'Emotion Detective',
+    description: 'Read fictional situations and guess what people might feel.',
+    ageGroups: ['child', 'teen', 'adult'],
+    estimatedMinutes: 6,
+    details: { skill: 'emotions' },
+    tags: ['emotions', 'empathy'],
+  },
+  {
+    code: 'pattern-planet',
+    kind: 'game',
+    title: 'Pattern Planet',
+    description: 'Discover the rule behind each pattern and complete it.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 5,
+    details: { skill: 'logic' },
+    tags: ['logic', 'focus'],
+  },
+  {
+    code: 'thought-detective',
+    kind: 'game',
+    title: 'Thought Detective',
+    description: 'Explore kind alternative explanations for tricky situations.',
+    ageGroups: ['teen', 'adult'],
+    estimatedMinutes: 6,
+    details: { skill: 'thinking' },
+    tags: ['reflection', 'emotions'],
+  },
+  {
+    code: 'calm-dragon',
+    kind: 'game',
+    title: 'Calm the Dragon',
+    description: 'Guide a friendly dragon with slow breathing: in for 4, out for 6.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 4,
+    details: { skill: 'calm', breathIn: 4, breathOut: 6, cycles: 6 },
+    tags: ['calm', 'breathing'],
+  },
+  {
+    code: 'story-choices',
+    kind: 'game',
+    title: 'Story Choices',
+    description: 'Choose what happens next in a friendly story and see how it unfolds.',
+    ageGroups: ['child', 'teen'],
+    estimatedMinutes: 6,
+    details: { skill: 'social' },
+    tags: ['social', 'decisions'],
+  },
+  {
+    code: 'habit-architect',
+    kind: 'game',
+    title: 'Habit Architect',
+    description: 'Break a habit you want into small buildable steps.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 7,
+    details: { skill: 'habits' },
+    tags: ['habits', 'planning'],
+  },
+  {
+    code: 'cognitive-sprint',
+    kind: 'game',
+    title: 'Cognitive Sprint',
+    description: 'A short mental workout mixing quick recall and matching rounds.',
+    ageGroups: ['adult', 'older_adult'],
+    estimatedMinutes: 5,
+    details: { skill: 'memory' },
+    tags: ['memory', 'focus'],
+  },
+  {
+    code: 'word-garden',
+    kind: 'game',
+    title: 'Word Garden',
+    description: 'Grow words by finding letters in a gentle word puzzle.',
+    ageGroups: ['older_adult'],
+    estimatedMinutes: 5,
+    details: { skill: 'language' },
+    tags: ['language', 'memory'],
+  },
+  {
+    code: 'memory-lane',
+    kind: 'game',
+    title: 'Memory Lane',
+    description: 'A relaxed matching game with familiar everyday images.',
+    ageGroups: ['older_adult'],
+    estimatedMinutes: 4,
+    details: { skill: 'memory' },
+    tags: ['memory'],
+  },
+  {
+    code: 'gratitude-quest',
+    kind: 'game',
+    title: 'Gratitude Quest',
+    description: 'Collect small good things by spotting things to be thankful for.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 5,
+    details: { skill: 'emotions' },
+    tags: ['emotions', 'reflection'],
+  },
+
+  // ---- Habit templates ----
+  {
+    code: 'habit-sleep-window',
+    kind: 'habit',
+    title: 'Consistent bedtime window',
+    description: 'Go to bed within the same 45-minute window each night.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 2,
+    details: { category: 'sleep', frequency: 'daily', emoji: '🌙' },
+    tags: ['sleep'],
+  },
+  {
+    code: 'habit-morning-light',
+    kind: 'habit',
+    title: 'Morning daylight',
+    description: 'Get a few minutes of daylight soon after waking.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 5,
+    details: { category: 'movement', frequency: 'daily', emoji: '☀️' },
+    tags: ['sleep', 'movement'],
+  },
+  {
+    code: 'habit-breathing-break',
+    kind: 'habit',
+    title: 'Breathing break',
+    description: 'One slow-breathing minute during a stressful moment.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 1,
+    details: { category: 'mindfulness', frequency: 'daily', emoji: '🫁' },
+    tags: ['calm'],
+  },
+  {
+    code: 'habit-daily-walk',
+    kind: 'habit',
+    title: 'Daily walk',
+    description: 'A short walk most days, at any pace that suits you.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 20,
+    details: { category: 'movement', frequency: 'daily', emoji: '🚶' },
+    tags: ['movement'],
+  },
+  {
+    code: 'habit-journal-check',
+    kind: 'habit',
+    title: 'Two-line journal',
+    description: 'Write two lines about your day before bed.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 3,
+    details: { category: 'mindfulness', frequency: 'daily', emoji: '📓' },
+    tags: ['reflection'],
+  },
+  {
+    code: 'habit-study-sprints',
+    kind: 'habit',
+    title: 'Focus sprints',
+    description: 'Short focused work sessions with planned breaks.',
+    ageGroups: ['teen', 'adult'],
+    estimatedMinutes: 25,
+    details: { category: 'focus', frequency: 'daily', emoji: '🎯' },
+    tags: ['focus'],
+  },
+  {
+    code: 'habit-social-touch',
+    kind: 'habit',
+    title: 'Weekly connect',
+    description: 'Reach out to one person you care about each week.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 10,
+    details: { category: 'social', frequency: 'weekly', emoji: '💬' },
+    tags: ['social'],
+  },
+  {
+    code: 'habit-screen-curfew',
+    kind: 'habit',
+    title: 'Screen wind-down',
+    description: 'Dim screens an hour before your target bedtime.',
+    ageGroups: ['teen', 'adult'],
+    estimatedMinutes: 5,
+    details: { category: 'sleep', frequency: 'daily', emoji: '📵' },
+    tags: ['sleep', 'digital'],
+  },
+  {
+    code: 'habit-kindness-act',
+    kind: 'habit',
+    title: 'Kindness act',
+    description: 'Do one small kind thing for someone each day.',
+    ageGroups: ['child', 'teen'],
+    estimatedMinutes: 5,
+    details: { category: 'social', frequency: 'daily', emoji: '💛' },
+    tags: ['social', 'emotions'],
+  },
+
+  // ---- Journal prompts ----
+  {
+    code: 'jp-gratitude',
+    kind: 'journal_prompt',
+    title: 'Three good things',
+    description: 'Write about three things that went well today and why.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 5,
+    details: { prompt: 'Three things that went well today were… and here is why each one mattered.' },
+    tags: ['emotions'],
+  },
+  {
+    code: 'jp-feeling-word',
+    kind: 'journal_prompt',
+    title: 'Name the feeling',
+    description: 'Pick one feeling word and describe where you notice it.',
+    ageGroups: ['teen', 'adult'],
+    estimatedMinutes: 4,
+    details: { prompt: 'One feeling I noticed today was ___. I notice it mostly in my (body / thoughts / actions).' },
+    tags: ['emotions'],
+  },
+  {
+    code: 'jp-unwind',
+    kind: 'journal_prompt',
+    title: 'What helps me unwind',
+    description: 'List the activities that genuinely help you relax.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 4,
+    details: { prompt: 'Activities that genuinely help me unwind are…' },
+    tags: ['calm', 'sleep'],
+  },
+  {
+    code: 'jp-tomorrow-aim',
+    kind: 'journal_prompt',
+    title: 'Tomorrow in one sentence',
+    description: 'Write one sentence about what matters most tomorrow.',
+    ageGroups: ['teen', 'adult'],
+    estimatedMinutes: 3,
+    details: { prompt: 'Tomorrow, the one thing that matters most is…' },
+    tags: ['focus'],
+  },
+  {
+    code: 'jp-safe-place',
+    kind: 'journal_prompt',
+    title: 'My calm place',
+    description: 'Describe a place where you feel calm and safe.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 5,
+    details: { prompt: 'A place where I feel calm looks like… I can picture (what I see, hear and feel).' },
+    tags: ['calm'],
+  },
+  {
+    code: 'jp-energy-map',
+    kind: 'journal_prompt',
+    title: 'Energy map',
+    description: 'Note when your energy is highest and lowest today.',
+    ageGroups: ['adult', 'older_adult'],
+    estimatedMinutes: 4,
+    details: { prompt: 'My energy was highest around… and lowest around…' },
+    tags: ['focus', 'sleep'],
+  },
+  {
+    code: 'jp-worry-dump',
+    kind: 'journal_prompt',
+    title: 'Worry dump',
+    description: 'Write worries down to get them out of your head.',
+    ageGroups: ['teen', 'adult'],
+    estimatedMinutes: 5,
+    details: { prompt: 'Right now my mind keeps looping on… Writing it down, the smallest next step I control is…' },
+    tags: ['calm', 'emotions'],
+  },
+  {
+    code: 'jp-kind-self',
+    kind: 'journal_prompt',
+    title: 'A kind word to myself',
+    description: 'Write what you would say to a friend in your situation.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 4,
+    details: { prompt: 'If a friend told me this, I would say… (now saying it to myself)' },
+    tags: ['emotions'],
+  },
+
+  // ---- Activities / routines ----
+  {
+    code: 'act-bedtime-routine',
+    kind: 'sleep_routine',
+    title: 'Wind-down routine',
+    description: 'A 30-minute pre-sleep routine: dim lights, calm activity, consistent bedtime.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 30,
+    details: {
+      steps: [
+        'Dim the lights and put phones away',
+        'Do something quiet: reading, stretching, music',
+        'Brush teeth and get ready for bed at the same time each night',
+      ],
+    },
+    tags: ['sleep'],
+  },
+  {
+    code: 'act-focus-sprint-plan',
+    kind: 'activity',
+    title: 'Focus sprint plan',
+    description: 'Plan three 25-minute focus blocks with short breaks.',
+    ageGroups: ['teen', 'adult'],
+    estimatedMinutes: 5,
+    details: {
+      steps: [
+        'Pick one small task',
+        'Set a 25-minute timer and remove one distraction',
+        'Take a 5-minute break, then repeat or stop with a clear next step',
+      ],
+    },
+    tags: ['focus'],
+  },
+  {
+    code: 'act-connect-someone',
+    kind: 'activity',
+    title: 'Reach out',
+    description: 'Send a short message to someone you trust.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 5,
+    details: { steps: ['Pick one person', 'Send a simple message', 'Note how you feel afterwards'] },
+    tags: ['social'],
+  },
+  {
+    code: 'act-gratitude-round',
+    kind: 'activity',
+    title: 'Gratitude round',
+    description: 'Name three small things you appreciate right now.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 3,
+    details: { steps: ['Think of three small good things', 'Say why each mattered'] },
+    tags: ['emotions'],
+  },
+  {
+    code: 'act-name-emotions',
+    kind: 'activity',
+    title: 'Name it to tame it',
+    description: 'Label your current emotions with precise words.',
+    ageGroups: ['child', 'teen', 'adult'],
+    estimatedMinutes: 3,
+    details: {
+      steps: [
+        'Pause and take two slow breaths',
+        'Name the feeling with one precise word',
+        'Notice where you feel it in your body',
+      ],
+    },
+    tags: ['emotions'],
+  },
+  {
+    code: 'act-gentle-mobility',
+    kind: 'activity',
+    title: 'Gentle mobility',
+    description: 'Five minutes of easy stretches you can do anywhere.',
+    ageGroups: ['adult', 'older_adult'],
+    estimatedMinutes: 5,
+    details: {
+      steps: ['Roll shoulders slowly', 'Gentle neck turns', 'Reach up and fold forward comfortably'],
+    },
+    tags: ['movement', 'calm'],
+  },
+  {
+    code: 'act-kindness-quest',
+    kind: 'activity',
+    title: 'Kindness quest',
+    description: 'Do one small kind action and notice how it feels.',
+    ageGroups: ['child', 'teen'],
+    estimatedMinutes: 5,
+    details: { steps: ['Choose one kind action', 'Do it', 'Notice your feeling after'] },
+    tags: ['social', 'emotions'],
+  },
+
+  // ---- Reflections ----
+  {
+    code: 'ref-week-review',
+    kind: 'reflection',
+    title: 'Weekly reflection',
+    description: 'Review your week: highs, lows and one thing to try next week.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 8,
+    details: {
+      questions: [
+        'What went well this week?',
+        'What was hardest?',
+        'One small thing I want to try next week is…',
+      ],
+    },
+    tags: ['reflection'],
+  },
+  {
+    code: 'ref-energy-audit',
+    kind: 'reflection',
+    title: 'Energy audit',
+    description: 'Notice which activities drain or restore your energy.',
+    ageGroups: ['adult'],
+    estimatedMinutes: 6,
+    details: { questions: ['Which activity drained me most?', 'Which restored me most?'] },
+    tags: ['focus', 'reflection'],
+  },
+  {
+    code: 'ref-win-log',
+    kind: 'reflection',
+    title: 'Win log',
+    description: 'Write down three wins from this week, however small.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 4,
+    details: { questions: ['Three wins from this week…'] },
+    tags: ['emotions', 'reflection'],
+  },
+];
+
+const byCode = new Map(WELLNESS_CONTENT.map((item) => [item.code, item]));
+
+export function getContentItem(code: string): WellnessContentItem | undefined {
+  return byCode.get(code);
+}
+
+export function contentForAge(ageGroup: AgeGroup): WellnessContentItem[] {
+  return WELLNESS_CONTENT.filter((item) => item.ageGroups.includes(ageGroup));
+}
