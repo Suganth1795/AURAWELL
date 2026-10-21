@@ -67,6 +67,7 @@ export interface AnalyticsOverview {
     code: string;
     summary: string;
     priorities: string[];
+    indicators: Record<string, number>;
     completedAt: string;
   } | null;
 }
@@ -101,7 +102,7 @@ export async function getAnalyticsOverview(user: UserDoc, days = TREND_DAYS): Pr
     Habit.find({ userId, deletedAt: null, archived: false }).select('_id'),
     HabitEntry.find({ userId, dayKey: { $gte: from }, completed: true }).select('habitId dayKey'),
     AssessmentResponse.findOne({ userId }).sort({ completedAt: -1 }).select(
-      'assessmentCode summary priorities completedAt',
+      'assessmentCode summary priorities indicators completedAt',
     ),
   ]);
 
@@ -217,6 +218,7 @@ export async function getAnalyticsOverview(user: UserDoc, days = TREND_DAYS): Pr
           code: latestAssessment.assessmentCode,
           summary: latestAssessment.summary,
           priorities: latestAssessment.priorities ?? [],
+          indicators: (latestAssessment.indicators as Record<string, number>) ?? {},
           completedAt: latestAssessment.completedAt.toISOString(),
         }
       : null,

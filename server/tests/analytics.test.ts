@@ -111,6 +111,8 @@ describe('analytics API', () => {
     expect(latest).not.toBeNull();
     expect(latest.code).toBe('emotional-wellness');
     expect(typeof latest.summary).toBe('string');
+    expect(typeof latest.indicators).toBe('object');
+    expect(Object.keys(latest.indicators).length).toBeGreaterThan(0);
     expect(res.body.data.totals.assessments).toBe(1);
   });
 

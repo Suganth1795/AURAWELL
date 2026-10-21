@@ -36,6 +36,7 @@ export interface AnalyticsOverview {
     code: string;
     summary: string;
     priorities: string[];
+    indicators: Record<string, number>;
     completedAt: string;
   } | null;
 }
