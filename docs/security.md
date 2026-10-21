@@ -112,8 +112,14 @@ The AI layer is deliberately constrained (see also
 
 ## Known limitations / production hardening
 
+- The CSRF defence is the stateless double-submit pattern. It relies on the
+  attacker being unable to read or set the token cookie; deployments on shared
+  parent domains should also serve the app on a dedicated registrable domain and
+  set `secure` cookies (already on in production).
 - The guardian workflow for minors is represented in data (consent records with
   `source: 'guardian'`) but does not yet include out-of-band guardian verification.
 - In-app notifications are stored only; no email/SMS delivery channel is wired up.
 - Multi-instance deployments should move rate-limit state to a shared store and
   ensure `TRUST_PROXY` is set correctly.
+- Calendar day keys, streaks and daily rollups are computed in **UTC**. The
+  `timezone` preference is stored but not yet applied to those calculations.

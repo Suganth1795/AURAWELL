@@ -14,7 +14,12 @@ import { activityService } from '@/features/wellness/wellnessService';
 import { MiniBarChart } from '@/features/wellness/MiniBarChart';
 import { RewardNote } from '@/features/wellness/RewardNote';
 import { useApplyReward } from '@/features/wellness/useApplyReward';
-import { ACTIVITY_TYPES, type ActivityEntry, type ActivityType, type RewardSummary } from '@/features/wellness/types';
+import {
+  ACTIVITY_TYPES,
+  type ActivityEntry,
+  type ActivityType,
+  type RewardSummary,
+} from '@/features/wellness/types';
 
 const ACTIVITY_LABELS: Record<ActivityType, string> = {
   walk: 'Walk',
@@ -77,8 +82,13 @@ export function ActivityPage(): React.JSX.Element {
   }
 
   async function handleDelete(id: string): Promise<void> {
-    await activityService.remove(id);
-    reload();
+    setSaveError(null);
+    try {
+      await activityService.remove(id);
+      reload();
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : 'Could not delete that entry.');
+    }
   }
 
   return (
@@ -181,7 +191,8 @@ export function ActivityPage(): React.JSX.Element {
                 ariaLabel="Activity minutes over the last 14 days"
                 data={data.summary.series.map((point) => ({
                   label: point.dayKey.slice(5),
-                  value: point.durationMinutes === 0 ? null : Math.min(point.durationMinutes / 60, 1),
+                  value:
+                    point.durationMinutes === 0 ? null : Math.min(point.durationMinutes / 60, 1),
                   caption: `${point.dayKey}: ${point.durationMinutes} min, ${point.sessions} session(s)`,
                 }))}
               />
@@ -216,14 +227,19 @@ function ActivityList({
   return (
     <ul className="space-y-3">
       {entries.map((entry) => (
-        <li key={entry.id} className="flex items-start justify-between gap-3 border-b pb-3 last:border-0">
+        <li
+          key={entry.id}
+          className="flex items-start justify-between gap-3 border-b pb-3 last:border-0"
+        >
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-medium">{ACTIVITY_LABELS[entry.type]}</span>
               <Badge variant="outline">{entry.durationMinutes} min</Badge>
               {entry.steps !== null ? <Badge variant="secondary">{entry.steps} steps</Badge> : null}
             </div>
-            {entry.notes ? <p className="mt-1 text-sm text-muted-foreground">{entry.notes}</p> : null}
+            {entry.notes ? (
+              <p className="mt-1 text-sm text-muted-foreground">{entry.notes}</p>
+            ) : null}
           </div>
           <Button
             variant="ghost"

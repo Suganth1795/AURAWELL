@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { applyPreferences } from '@/utils/applyPreferences';
+import { setUnauthorizedHandler } from '@/services/api';
 import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/features/authentication/LoginPage';
 import { RegisterPage } from '@/features/authentication/RegisterPage';
@@ -31,10 +32,21 @@ export function AppRoutes(): React.JSX.Element {
   const init = useAuthStore((s) => s.init);
   const initializing = useAuthStore((s) => s.initializing);
   const user = useAuthStore((s) => s.user);
+  const navigate = useNavigate();
 
   useEffect(() => {
     void init();
   }, [init]);
+
+  // When the session expires mid-use, clear auth state and send the user to the
+  // login screen instead of leaving raw errors on the page.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      useAuthStore.setState({ user: null, status: 'anonymous' });
+      navigate('/login', { replace: true });
+    });
+    return () => setUnauthorizedHandler(null);
+  }, [navigate]);
 
   useEffect(() => {
     applyPreferences(user?.preferences ?? null);

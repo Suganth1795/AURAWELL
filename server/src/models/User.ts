@@ -23,6 +23,10 @@ export interface UserWellness {
   longestStreak: number;
   lastActiveDay: string | null;
   avatar: { emoji: string; color: string };
+  /** UTC day the game XP counter below belongs to; resets when the day changes. */
+  gameXpDay: string | null;
+  /** Game XP granted so far on `gameXpDay`, used to cap farming. */
+  gameXpToday: number;
 }
 
 export interface UserInterface {
@@ -77,6 +81,8 @@ const wellnessSchema = new Schema<UserWellness>(
     streakDays: { type: Number, default: 0, min: 0 },
     longestStreak: { type: Number, default: 0, min: 0 },
     lastActiveDay: { type: String, default: null },
+    gameXpDay: { type: String, default: null },
+    gameXpToday: { type: Number, default: 0, min: 0 },
     avatar: {
       type: new Schema<UserWellness['avatar']>(
         {

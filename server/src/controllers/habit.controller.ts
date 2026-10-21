@@ -1,6 +1,7 @@
 import type { RequestHandler } from 'express';
 import { requireUser } from '../middleware/auth.js';
 import { ok } from '../utils/http.js';
+import { booleanQuery } from '../utils/zod.js';
 import { z } from 'zod';
 import {
   createHabit,
@@ -15,7 +16,7 @@ export const listHabitsHandler: RequestHandler = async (req, res, next) => {
   try {
     const user = requireUser(req);
     const { includeArchived } = z
-      .object({ includeArchived: z.coerce.boolean().default(false) })
+      .object({ includeArchived: booleanQuery.default(false) })
       .parse(req.query);
     ok(res, { habits: await listHabits(user, includeArchived) });
   } catch (error) {
@@ -55,7 +56,11 @@ export const deleteHabitHandler: RequestHandler = async (req, res, next) => {
 export const toggleHabitHandler: RequestHandler = async (req, res, next) => {
   try {
     const user = requireUser(req);
-    const { completed, dayKey, note } = req.body as { completed: boolean; dayKey?: string; note?: string };
+    const { completed, dayKey, note } = req.body as {
+      completed: boolean;
+      dayKey?: string;
+      note?: string;
+    };
     const result = await toggleHabitEntry(user, String(req.params.id), { completed, dayKey, note });
     ok(res, result);
   } catch (error) {

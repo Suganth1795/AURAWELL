@@ -39,11 +39,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { user } = await api.get<{ user: User }>('/auth/me');
       set({ user, status: 'authenticated', initializing: false });
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        set({ user: null, status: 'anonymous', initializing: false });
-      } else {
-        set({ user: null, status: 'anonymous', initializing: false });
-      }
+      // A 401 is the normal "not logged in" signal. Anything else (network /
+      // server error) still resolves to anonymous so the landing page renders,
+      // but we surface the reason so callers can offer a retry.
+      const message =
+        error instanceof ApiError && error.status !== 401
+          ? 'Could not check your session. Check your connection and try again.'
+          : null;
+      set({ user: null, status: 'anonymous', initializing: false, error: message });
     }
   },
 

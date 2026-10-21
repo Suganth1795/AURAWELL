@@ -2,6 +2,7 @@ import type { RequestHandler } from 'express';
 import { z } from 'zod';
 import { requireUser } from '../middleware/auth.js';
 import { ok } from '../utils/http.js';
+import { booleanQuery } from '../utils/zod.js';
 import {
   deleteNotification,
   listNotifications,
@@ -15,7 +16,7 @@ export const listNotificationsHandler: RequestHandler = async (req, res, next) =
     const { limit, unreadOnly } = z
       .object({
         limit: z.coerce.number().int().min(1).max(50).default(20),
-        unreadOnly: z.coerce.boolean().optional(),
+        unreadOnly: booleanQuery.optional(),
       })
       .parse(req.query);
     ok(res, await listNotifications(user, { limit, unreadOnly }));

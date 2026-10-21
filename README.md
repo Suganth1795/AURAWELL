@@ -68,16 +68,16 @@ npm run dev
 
 ### Scripts
 
-| Command             | Description                                       |
-| ------------------- | ------------------------------------------------- |
-| `npm run dev`       | Run client + server in watch mode                 |
-| `npm run build`     | Type-check and build both packages for production |
-| `npm start`         | Start the built server                            |
-| `npm run typecheck` | Type-check client then server                     |
-| `npm run lint`      | ESLint across the monorepo                        |
-| `npm test`          | Run server then client test suites                |
-| `npm run seed`      | Seed the assessment catalogue (`-w server`)       |
-| `npm run test:e2e`  | Run Playwright end-to-end tests (if configured)   |
+| Command             | Description                                                      |
+| ------------------- | ---------------------------------------------------------------- |
+| `npm run dev`       | Run client + server in watch mode                                |
+| `npm run build`     | Type-check and build both packages for production                |
+| `npm start`         | Start the built server                                           |
+| `npm run typecheck` | Type-check client then server                                    |
+| `npm run lint`      | ESLint across the monorepo                                       |
+| `npm test`          | Run server then client test suites                               |
+| `npm run seed`      | Seed the assessment catalogue (`-w server`)                      |
+| `npm run test:e2e`  | Run Playwright end-to-end tests (needs `npx playwright install`) |
 
 ## Documentation
 

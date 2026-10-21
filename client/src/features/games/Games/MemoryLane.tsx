@@ -10,7 +10,12 @@ interface Card {
   icon: string;
 }
 
-export function MemoryLane({ game, difficulty, onFinish, onExit }: GameComponentProps): React.JSX.Element {
+export function MemoryLane({
+  game,
+  difficulty,
+  onFinish,
+  onExit,
+}: GameComponentProps): React.JSX.Element {
   const pairsStart = Number(game.settings.pairsStart ?? 3);
   const pairsMax = Number(game.settings.pairsMax ?? 6);
   const pairs = clamp(
@@ -91,14 +96,20 @@ export function MemoryLane({ game, difficulty, onFinish, onExit }: GameComponent
               key={card.id}
               type="button"
               onClick={() => flip(card)}
-              aria-label={faceUp ? undefined : 'Hidden card'}
-              className={`flex aspect-square items-center justify-center rounded-xl border text-4xl transition-colors focus-visible:outline-2 focus-visible:outline-ring ${
+              aria-label={
                 faceUp
-                  ? 'border-primary bg-primary/15'
-                  : 'border-border bg-muted hover:bg-muted/70'
+                  ? `Card ${card.icon}${matched.has(card.icon) ? ', matched' : ', face up'}`
+                  : 'Hidden card'
+              }
+              className={`flex aspect-square items-center justify-center rounded-xl border text-4xl transition-colors focus-visible:outline-2 focus-visible:outline-ring ${
+                faceUp ? 'border-primary bg-primary/15' : 'border-border bg-muted hover:bg-muted/70'
               }`}
             >
-              {faceUp ? <span aria-hidden="true">{card.icon}</span> : <span aria-hidden="true">❓</span>}
+              {faceUp ? (
+                <span aria-hidden="true">{card.icon}</span>
+              ) : (
+                <span aria-hidden="true">❓</span>
+              )}
             </button>
           );
         })}

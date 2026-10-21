@@ -59,8 +59,13 @@ export function MoodPage(): React.JSX.Element {
   }
 
   async function handleDelete(id: string): Promise<void> {
-    await moodService.remove(id);
-    reload();
+    setSaveError(null);
+    try {
+      await moodService.remove(id);
+      reload();
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : 'Could not delete that entry.');
+    }
   }
 
   return (
@@ -68,15 +73,17 @@ export function MoodPage(): React.JSX.Element {
       <div>
         <h1 className="text-2xl font-semibold">Mood</h1>
         <p className="text-sm text-muted-foreground">
-          Check in with how you feel. There are no right or wrong answers, and nothing is shared with
-          anyone.
+          Check in with how you feel. There are no right or wrong answers, and nothing is shared
+          with anyone.
         </p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">How are you feeling right now?</CardTitle>
-          <CardDescription>Pick the closest word. You can log more than once a day.</CardDescription>
+          <CardDescription>
+            Pick the closest word. You can log more than once a day.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -132,7 +139,9 @@ export function MoodPage(): React.JSX.Element {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Last 14 days</CardTitle>
-              <CardDescription>Average mood score per day (1 = struggling, 5 = great).</CardDescription>
+              <CardDescription>
+                Average mood score per day (1 = struggling, 5 = great).
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <MiniBarChart
@@ -193,14 +202,19 @@ function MoodHistoryList({
       {combined.map((entry) => {
         const option = MOOD_OPTIONS.find((o) => o.value === entry.mood);
         return (
-          <li key={entry.id} className="flex items-start justify-between gap-3 border-b pb-3 last:border-0">
+          <li
+            key={entry.id}
+            className="flex items-start justify-between gap-3 border-b pb-3 last:border-0"
+          >
             <div>
               <div className="flex items-center gap-2">
                 <span aria-hidden="true">{option?.emoji}</span>
                 <span className="font-medium">{option?.label ?? entry.mood}</span>
                 <Badge variant="outline">{new Date(entry.recordedAt).toLocaleString()}</Badge>
               </div>
-              {entry.note ? <p className="mt-1 text-sm text-muted-foreground">{entry.note}</p> : null}
+              {entry.note ? (
+                <p className="mt-1 text-sm text-muted-foreground">{entry.note}</p>
+              ) : null}
             </div>
             <Button
               variant="ghost"

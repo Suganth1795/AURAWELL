@@ -16,12 +16,28 @@ export class ApiError extends Error {
   }
 }
 
+let onUnauthorized: (() => void) | null = null;
+
+/**
+ * Registers a callback fired once when the session expires mid-use (a 401 on a
+ * request other than the initial `/auth/me` probe). Used to clear client auth
+ * state and route the user back to login instead of surfacing raw errors.
+ */
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  onUnauthorized = handler;
+}
+
 function csrfToken(): string {
   const match = document.cookie.match(/(?:^|;\s*)aurawell_csrf=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : '';
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  retried = false,
+): Promise<T> {
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (method !== 'GET') headers['X-CSRF-Token'] = csrfToken();
@@ -49,16 +65,27 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
   if (!response.ok) {
     const err = (payload as ApiErrorBody | null)?.error;
-    throw new ApiError(
-      response.status,
-      err?.message ?? 'Something went wrong',
-      err?.code ?? 'unknown_error',
-      err?.details,
-    );
+    const code = err?.code ?? 'unknown_error';
+    // A stale CSRF cookie (e.g. a long-lived tab) can reject a mutation even
+    // though the session is valid. Refresh the cookie once and retry.
+    if (response.status === 403 && code === 'csrf_invalid' && !retried) {
+      await ensureCsrf();
+      return request<T>(method, path, body, true);
+    }
+    // An expired session mid-use should log the user out and bounce them to
+    // login, rather than showing a raw "unauthenticated" error. The initial
+    // `/auth/me` probe is excluded because a 401 there is the normal
+    // "not logged in" signal.
+    if (response.status === 401 && !path.startsWith('/auth/') && onUnauthorized) {
+      onUnauthorized();
+    }
+    throw new ApiError(response.status, err?.message ?? 'Something went wrong', code, err?.details);
   }
 
-  const data = (payload as { data?: T } | null)?.data;
-  return (data ?? payload) as T;
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    return (payload as { data: T }).data;
+  }
+  return payload as T;
 }
 
 export const api = {

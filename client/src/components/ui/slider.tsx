@@ -36,7 +36,10 @@ export function Slider({
         <BaseSlider.Track className="relative h-1.5 w-full rounded-full bg-muted">
           <BaseSlider.Indicator className="absolute rounded-full bg-primary" />
         </BaseSlider.Track>
-        <BaseSlider.Thumb className="block h-5 w-5 rounded-full border-2 border-primary bg-card shadow focus-visible:outline-2 focus-visible:outline-ring" />
+        <BaseSlider.Thumb
+          aria-label={label}
+          className="block h-5 w-5 rounded-full border-2 border-primary bg-card shadow focus-visible:outline-2 focus-visible:outline-ring"
+        />
       </BaseSlider.Control>
     </BaseSlider.Root>
   );

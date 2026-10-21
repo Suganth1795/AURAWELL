@@ -19,6 +19,7 @@ export function Popover({
   className?: string;
   align?: 'start' | 'center' | 'end';
 }): React.JSX.Element {
+  const titleId = React.useId();
   return (
     <BasePopover.Root>
       <BasePopover.Trigger
@@ -27,12 +28,15 @@ export function Popover({
       <BasePopover.Portal>
         <BasePopover.Positioner sideOffset={8} align={align} className="z-50">
           <BasePopover.Popup
+            aria-labelledby={titleId}
             className={cn(
               'w-[min(22rem,92vw)] rounded-lg border border-border bg-card p-4 shadow-lg outline-none',
               className,
             )}
           >
-            <p className="mb-2 text-sm font-semibold">{title}</p>
+            <p id={titleId} className="mb-2 text-sm font-semibold">
+              {title}
+            </p>
             {children}
           </BasePopover.Popup>
         </BasePopover.Positioner>

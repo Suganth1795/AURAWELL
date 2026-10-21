@@ -12,30 +12,62 @@ const STORY: Record<string, Step> = {
   start: {
     text: 'It is playtime. You notice someone sitting alone by the fence, looking at the ground.',
     choices: [
-      { label: 'Go over and say hello', next: 'hello', reflection: 'Reaching out can help someone feel included.' },
+      {
+        label: 'Go over and say hello',
+        next: 'hello',
+        reflection: 'Reaching out can help someone feel included.',
+      },
       { label: 'Keep playing and notice how you feel', next: 'notice' },
-      { label: 'Invite them to join your game', next: 'invite', reflection: 'Including others is a kind, brave choice.' },
+      {
+        label: 'Invite them to join your game',
+        next: 'invite',
+        reflection: 'Including others is a kind, brave choice.',
+      },
     ],
   },
   hello: {
     text: 'You say hello. They look up and smile a little, then say they are not sure how to join in.',
     choices: [
-      { label: 'Show them how the game works', next: 'invite', reflection: 'Teaching a friend can make joining easier for them.' },
-      { label: 'Ask what they like to play', next: 'invite', reflection: 'Asking what someone enjoys helps them feel seen.' },
+      {
+        label: 'Show them how the game works',
+        next: 'invite',
+        reflection: 'Teaching a friend can make joining easier for them.',
+      },
+      {
+        label: 'Ask what they like to play',
+        next: 'invite',
+        reflection: 'Asking what someone enjoys helps them feel seen.',
+      },
     ],
   },
   notice: {
     text: 'You keep playing, but you keep thinking about them. You feel a little tug to check in.',
     choices: [
-      { label: 'Follow that feeling and go say hi', next: 'hello', reflection: 'Noticing your care for others is a strength.' },
-      { label: 'Seek a grown-up to help you include them', next: 'invite', reflection: 'Asking for help is a smart, kind move.' },
+      {
+        label: 'Follow that feeling and go say hi',
+        next: 'hello',
+        reflection: 'Noticing your care for others is a strength.',
+      },
+      {
+        label: 'Seek a grown-up to help you include them',
+        next: 'invite',
+        reflection: 'Asking for help is a smart, kind move.',
+      },
     ],
   },
   invite: {
     text: 'They join in! Partway through, they make a mistake and look embarrassed. You can choose what to do next.',
     choices: [
-      { label: 'Say “that’s okay, mistakes happen”', next: 'end', reflection: 'Kind words help us all feel safe to try.' },
-      { label: 'Gently share a tip for next time', next: 'end', reflection: 'Helping without judging keeps things friendly.' },
+      {
+        label: 'Say “that’s okay, mistakes happen”',
+        next: 'end',
+        reflection: 'Kind words help us all feel safe to try.',
+      },
+      {
+        label: 'Gently share a tip for next time',
+        next: 'end',
+        reflection: 'Helping without judging keeps things friendly.',
+      },
     ],
   },
   end: {
@@ -51,7 +83,9 @@ export function StoryChoices({ game, onExit, onFinish }: GameComponentProps): Re
   const [reflections, setReflections] = useState<string[]>([]);
   const [choicesMade, setChoicesMade] = useState(0);
   const node = STORY[nodeId];
-  const finished = node.choices.length === 0 || choicesMade >= pathLength;
+  // Only a node with no further choices ends the story — otherwise the fixed
+  // `pathLength` estimate can stop the narrative at a non-terminal node.
+  const finished = node.choices.length === 0;
 
   function choose(choice: Step['choices'][number]) {
     if (choice.reflection) setReflections((r) => [...r, choice.reflection!]);
@@ -62,17 +96,17 @@ export function StoryChoices({ game, onExit, onFinish }: GameComponentProps): Re
   function finish() {
     onFinish({
       score: choicesMade,
-      maxScore: pathLength,
+      maxScore: Math.max(choicesMade, 1),
       completed: true,
-      summary: { choicesMade },
+      summary: { choicesMade, reflections: reflections.length },
     });
   }
 
   return (
     <GameShell
       title={game.title}
-      roundLabel={`Choice ${Math.min(choicesMade + 1, pathLength)} of ${pathLength}`}
-      progress={choicesMade / pathLength}
+      roundLabel={`Choice ${choicesMade + 1}`}
+      progress={Math.min(1, choicesMade / pathLength)}
       onExit={onExit}
       footer={finished ? <Button onClick={finish}>See my results</Button> : undefined}
     >

@@ -60,9 +60,7 @@ export function HabitArchitect({ game, onExit, onFinish }: GameComponentProps): 
       roundLabel={`${steps.length}/${maxSteps} steps`}
       progress={steps.length / maxSteps}
       onExit={onExit}
-      footer={
-        canFinish ? <Button onClick={finish}>Build my plan</Button> : undefined
-      }
+      footer={canFinish ? <Button onClick={finish}>Build my plan</Button> : undefined}
     >
       <p className="mb-3 text-sm text-muted-foreground">
         Turn one small habit into tiny, easy steps. Small enough to feel almost too easy is perfect.
@@ -99,6 +97,7 @@ export function HabitArchitect({ game, onExit, onFinish }: GameComponentProps): 
         <Input
           value={draft}
           maxLength={100}
+          aria-label="Add your own step"
           placeholder="Add your own step…"
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {

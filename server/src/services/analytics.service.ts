@@ -77,7 +77,10 @@ export interface AnalyticsOverview {
  * overview. Every figure is a descriptive count or average of what the user
  * logged; nothing here interprets or diagnoses a condition.
  */
-export async function getAnalyticsOverview(user: UserDoc, days = TREND_DAYS): Promise<AnalyticsOverview> {
+export async function getAnalyticsOverview(
+  user: UserDoc,
+  days = TREND_DAYS,
+): Promise<AnalyticsOverview> {
   const keys = lastNDays(days);
   const from = keys[0];
   const userId = user._id;
@@ -92,6 +95,7 @@ export async function getAnalyticsOverview(user: UserDoc, days = TREND_DAYS): Pr
     habits,
     habitCompletions,
     latestAssessment,
+    totalHabitCheckIns,
   ] = await Promise.all([
     AssessmentResponse.countDocuments({ userId }),
     GameSession.countDocuments({ userId }),
@@ -101,12 +105,11 @@ export async function getAnalyticsOverview(user: UserDoc, days = TREND_DAYS): Pr
     ActivityEntry.find({ userId, dayKey: { $gte: from } }).select('dayKey durationMinutes'),
     Habit.find({ userId, deletedAt: null, archived: false }).select('_id'),
     HabitEntry.find({ userId, dayKey: { $gte: from }, completed: true }).select('habitId dayKey'),
-    AssessmentResponse.findOne({ userId }).sort({ completedAt: -1 }).select(
-      'assessmentCode summary priorities indicators completedAt',
-    ),
+    AssessmentResponse.findOne({ userId })
+      .sort({ completedAt: -1 })
+      .select('assessmentCode summary priorities indicators completedAt'),
+    HabitEntry.countDocuments({ userId, completed: true }),
   ]);
-
-  const totalHabitCheckIns = await HabitEntry.countDocuments({ userId, completed: true });
 
   const moodBuckets = new Map<string, number[]>();
   for (const entry of moodEntries) {
@@ -158,7 +161,8 @@ export async function getAnalyticsOverview(user: UserDoc, days = TREND_DAYS): Pr
     : null;
   const averageQuality = nightsLogged
     ? Math.round(
-        ([...sleepByDay.values()].reduce((sum, value) => sum + value.quality, 0) / nightsLogged) * 10,
+        ([...sleepByDay.values()].reduce((sum, value) => sum + value.quality, 0) / nightsLogged) *
+          10,
       ) / 10
     : null;
 

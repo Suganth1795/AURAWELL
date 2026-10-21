@@ -40,7 +40,10 @@ export function SleepPage(): React.JSX.Element {
   const applyReward = useApplyReward();
 
   const { data, error, loading, reload } = useAsync(async () => {
-    const [summary, history] = await Promise.all([sleepService.summary(14), sleepService.list(1, 10)]);
+    const [summary, history] = await Promise.all([
+      sleepService.summary(14),
+      sleepService.list(1, 10),
+    ]);
     return { summary, history };
   }, []);
 
@@ -68,8 +71,13 @@ export function SleepPage(): React.JSX.Element {
   }
 
   async function handleDelete(id: string): Promise<void> {
-    await sleepService.remove(id);
-    reload();
+    setSaveError(null);
+    try {
+      await sleepService.remove(id);
+      reload();
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : 'Could not delete that record.');
+    }
   }
 
   return (
@@ -167,7 +175,10 @@ export function SleepPage(): React.JSX.Element {
                 ariaLabel="Sleep duration over the last 14 nights"
                 data={data.summary.series.map((point) => ({
                   label: point.dayKey.slice(5),
-                  value: point.durationMinutes === null ? null : Math.min(point.durationMinutes / 720, 1),
+                  value:
+                    point.durationMinutes === null
+                      ? null
+                      : Math.min(point.durationMinutes / 720, 1),
                   caption:
                     point.durationMinutes === null
                       ? `${point.dayKey}: no entry`
@@ -205,14 +216,19 @@ function SleepList({
   return (
     <ul className="space-y-3">
       {entries.map((entry) => (
-        <li key={entry.id} className="flex items-start justify-between gap-3 border-b pb-3 last:border-0">
+        <li
+          key={entry.id}
+          className="flex items-start justify-between gap-3 border-b pb-3 last:border-0"
+        >
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-medium">{formatDuration(entry.durationMinutes)}</span>
               <Badge variant="outline">Quality {entry.quality}/5</Badge>
               <Badge variant="secondary">{entry.dayKey}</Badge>
             </div>
-            {entry.notes ? <p className="mt-1 text-sm text-muted-foreground">{entry.notes}</p> : null}
+            {entry.notes ? (
+              <p className="mt-1 text-sm text-muted-foreground">{entry.notes}</p>
+            ) : null}
           </div>
           <Button
             variant="ghost"

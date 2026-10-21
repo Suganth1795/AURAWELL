@@ -4,6 +4,7 @@ import { Alert } from '@/components/ui/alert';
 import { LoadingState } from '@/components/ui/spinner';
 import { useAsync } from '@/hooks/useAsync';
 import { ApiError } from '@/services/api';
+import { useApplyReward } from '@/features/wellness/useApplyReward';
 import { gamesService, newIdempotencyKey } from '@/features/games/gamesService';
 import { GameStage } from '@/features/games/GameStage';
 import { GameIntro } from '@/features/games/GameIntro';
@@ -15,6 +16,7 @@ type Stage = 'intro' | 'playing' | 'result';
 export function GameRunnerPage(): React.JSX.Element | null {
   const { code = '' } = useParams();
   const navigate = useNavigate();
+  const applyReward = useApplyReward();
 
   const { data: game, error: loadError, loading } = useAsync(() => gamesService.get(code), [code]);
 
@@ -26,15 +28,25 @@ export function GameRunnerPage(): React.JSX.Element | null {
   const roundKey = useRef<string>(newIdempotencyKey(code));
   const startedAt = useRef<number>(0);
 
+  // Reset all round state when navigating between games so the new game starts
+  // from its intro rather than inheriting the previous game's result screen.
+  // Adjusted during render (not in an effect) per React's state-reset pattern.
+  const [renderedCode, setRenderedCode] = useState(code);
+  if (renderedCode !== code) {
+    setRenderedCode(code);
+    setStage('intro');
+    setDifficulty(1);
+    setResult(null);
+    setSubmitError(null);
+    setSubmitting(false);
+  }
+
   const handleFinish = useCallback(
     async (outcome: GameOutcome) => {
       if (!game) return;
       setSubmitting(true);
       setSubmitError(null);
-      const durationSeconds = Math.max(
-        1,
-        Math.round((Date.now() - startedAt.current) / 1000),
-      );
+      const durationSeconds = Math.max(1, Math.round((Date.now() - startedAt.current) / 1000));
       try {
         const response = await gamesService.submit({
           gameCode: game.code,
@@ -48,13 +60,14 @@ export function GameRunnerPage(): React.JSX.Element | null {
         });
         setResult(response);
         setStage('result');
+        applyReward(response.reward);
       } catch (e) {
         setSubmitError(e instanceof Error ? e.message : 'Could not save your game result');
       } finally {
         setSubmitting(false);
       }
     },
-    [game, difficulty],
+    [game, difficulty, applyReward],
   );
 
   function start() {

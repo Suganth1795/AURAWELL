@@ -56,7 +56,9 @@ export async function listRecommendations(
   const filter: Record<string, unknown> = { userId: user._id };
   if (options.status) filter.status = options.status;
   if (options.kind) filter.kind = options.kind;
-  const docs = await Recommendation.find(filter).sort({ score: -1, createdAt: -1 }).limit(options.limit);
+  const docs = await Recommendation.find(filter)
+    .sort({ score: -1, createdAt: -1 })
+    .limit(options.limit);
   return docs.map(toDto);
 }
 
@@ -70,8 +72,18 @@ export async function updateRecommendation(
 
   if (input.status) {
     doc.status = input.status;
-    if (input.status === 'dismissed') doc.dismissedAt = new Date();
-    if (input.status === 'completed') doc.completedAt = new Date();
+    // Keep lifecycle timestamps consistent with the current status so a
+    // reopened (accepted/suggested) item does not retain a stale completion.
+    if (input.status === 'dismissed') {
+      doc.dismissedAt = new Date();
+    } else {
+      doc.dismissedAt = null;
+    }
+    if (input.status === 'completed') {
+      doc.completedAt = new Date();
+    } else {
+      doc.completedAt = null;
+    }
   }
   if (input.feedbackHelpful !== undefined) doc.feedbackHelpful = input.feedbackHelpful;
 

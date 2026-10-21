@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, FileText, ShieldCheck, Trash2 } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert } from '@/components/ui/alert';
@@ -34,8 +28,16 @@ const COUNT_LABELS: { key: string; label: string }[] = [
   { key: 'counselingMessages', label: 'AURA messages' },
 ];
 
+const CONSENT_LABELS: Record<string, string> = {
+  terms_of_service: 'Terms of service',
+  privacy_policy: 'Privacy policy',
+  ai_wellness_data: 'AI wellness data',
+  guardian_minor: 'Guardian consent',
+  journal_ai: 'Journal AI access',
+};
+
 export function formatConsentType(type: string): string {
-  return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return CONSENT_LABELS[type] ?? type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function PrivacyPage(): React.JSX.Element {
@@ -54,8 +56,12 @@ export function PrivacyPage(): React.JSX.Element {
       const link = document.createElement('a');
       link.href = url;
       link.download = `aurawell-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
       link.click();
-      URL.revokeObjectURL(url);
+      link.remove();
+      // Revoke after the browser has had a chance to start the download;
+      // revoking synchronously can cancel it in some browsers.
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch (e) {
       setExportError(e instanceof ApiError ? e.message : 'Could not create your export.');
     } finally {
@@ -98,7 +104,9 @@ export function PrivacyPage(): React.JSX.Element {
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <span>AI wellness data</span>
-                <Badge variant={data.consents.current.aiWellnessDataConsent ? 'success' : 'secondary'}>
+                <Badge
+                  variant={data.consents.current.aiWellnessDataConsent ? 'success' : 'secondary'}
+                >
                   {data.consents.current.aiWellnessDataConsent ? 'Allowed' : 'Not allowed'}
                 </Badge>
               </div>
@@ -151,7 +159,9 @@ export function PrivacyPage(): React.JSX.Element {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">What we store about you</CardTitle>
-              <CardDescription>Counts by data type. Nothing here is sold or shared.</CardDescription>
+              <CardDescription>
+                Counts by data type. Nothing here is sold or shared.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -207,11 +217,7 @@ export function PrivacyPage(): React.JSX.Element {
         </>
       ) : null}
 
-      <DeleteAccountModal
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        onDeleted={reload}
-      />
+      <DeleteAccountModal open={deleteOpen} onOpenChange={setDeleteOpen} onDeleted={reload} />
     </div>
   );
 }

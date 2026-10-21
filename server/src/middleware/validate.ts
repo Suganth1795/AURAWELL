@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import { ZodError, type ZodType } from 'zod';
+import type { ZodType } from 'zod';
 
 type Schemas = {
   body?: ZodType;
@@ -24,7 +24,7 @@ export function validate(schemas: Schemas): RequestHandler {
       }
       next();
     } catch (error) {
-      next(error instanceof ZodError ? error : error);
+      next(error);
     }
   };
 }

@@ -28,15 +28,31 @@ function isVisible(
   return dep.optionIds.some((id) => question.conditional!.showWhenOptionIds.includes(id));
 }
 
+/**
+ * The value a rating question shows when the user has not touched the slider.
+ * Rating questions always present a concrete value, so an untouched slider
+ * counts as an answer rather than blocking submission.
+ */
+function defaultRating(question: AssessmentQuestion): number {
+  const min = question.ratingMin ?? 1;
+  const max = question.ratingMax ?? 5;
+  return Math.ceil((min + max) / 2);
+}
+
+function effectiveRating(question: AssessmentQuestion, answer?: AssessmentAnswer): number {
+  return answer?.value ?? defaultRating(question);
+}
+
 function isAnswered(question: AssessmentQuestion, answer?: AssessmentAnswer): boolean {
-  if (!answer) return question.required === false;
   switch (question.responseType) {
     case 'rating':
-      return answer.value !== undefined;
+      return effectiveRating(question, answer) !== undefined;
     case 'short_text':
-      return question.required === false || (answer.text ?? '').trim().length > 0;
+      if (question.required === false) return true;
+      return (answer?.text ?? '').trim().length > 0;
     default:
-      return (answer.optionIds?.length ?? 0) > 0 || question.required === false;
+      if (question.required === false) return true;
+      return (answer?.optionIds?.length ?? 0) > 0;
   }
 }
 
@@ -75,7 +91,7 @@ export function AssessmentRunner({
   const isLast = current ? findNext(index, answers) === -1 : true;
 
   const answeredVisible = useMemo(
-    () => questions.filter((q) => answers[q.id] && isAnswered(q, answers[q.id])).length,
+    () => questions.filter((q) => isVisible(q, answers) && isAnswered(q, answers[q.id])).length,
     [questions, answers],
   );
   const progress = visibleCount > 0 ? Math.round(((answeredVisible + 1) / visibleCount) * 100) : 0;
@@ -118,7 +134,16 @@ export function AssessmentRunner({
     }
     const payload = questions
       .filter((q) => isVisible(q, answers))
-      .map((q) => answers[q.id])
+      .map((q): AssessmentAnswer | null => {
+        const answer = answers[q.id];
+        if (answer) return answer;
+        // Untouched rating questions display a default value; submit it so the
+        // result always reflects what the user saw.
+        if (q.responseType === 'rating') {
+          return { questionId: q.id, value: defaultRating(q) };
+        }
+        return null;
+      })
       .filter((a): a is AssessmentAnswer => Boolean(a));
     onSubmit(payload);
   }
@@ -147,16 +172,11 @@ export function AssessmentRunner({
     return <Alert variant="warning">This assessment has no questions available.</Alert>;
   }
 
-  const answeredNumbers = questions
-    .slice(0, index + 1)
-    .filter((q) => isVisible(q, answers)).length;
+  const answeredNumbers = questions.slice(0, index + 1).filter((q) => isVisible(q, answers)).length;
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <Progress
-        value={progress}
-        label={`Question ${answeredNumbers} of about ${visibleCount}`}
-      />
+      <Progress value={progress} label={`Question ${answeredNumbers} of about ${visibleCount}`} />
 
       {error ? <Alert variant="error">{error}</Alert> : null}
 
@@ -166,122 +186,119 @@ export function AssessmentRunner({
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.2 }}
       >
-          <fieldset className="space-y-4">
-            <legend className="text-lg font-medium">
-              {current.text}
-              {current.required === false ? (
-                <span className="ml-2 text-xs font-normal text-muted-foreground">Optional</span>
-              ) : null}
-            </legend>
-            {current.helpText ? (
-              <p className="text-sm text-muted-foreground">{current.helpText}</p>
+        <fieldset className="space-y-4">
+          <legend className="text-lg font-medium">
+            {current.text}
+            {current.required === false ? (
+              <span className="ml-2 text-xs font-normal text-muted-foreground">Optional</span>
             ) : null}
+          </legend>
+          {current.helpText ? (
+            <p className="text-sm text-muted-foreground">{current.helpText}</p>
+          ) : null}
 
-            {current.responseType === 'single_choice' || current.responseType === 'boolean' ? (
-              <RadioGroup
-                name={current.id}
-                value={currentAnswer?.optionIds?.[0]}
-                options={current.options.map((o) => ({
-                  value: o.id,
-                  label: o.label,
-                  emoji: o.emoji,
-                }))}
-                onChange={(value) => setAnswer(current.id, { optionIds: [value] })}
-              />
-            ) : null}
+          {current.responseType === 'single_choice' || current.responseType === 'boolean' ? (
+            <RadioGroup
+              name={current.id}
+              value={currentAnswer?.optionIds?.[0]}
+              options={current.options.map((o) => ({
+                value: o.id,
+                label: o.label,
+                emoji: o.emoji,
+              }))}
+              onChange={(value) => setAnswer(current.id, { optionIds: [value] })}
+            />
+          ) : null}
 
-            {current.responseType === 'multi_choice' ? (
-              <div className="space-y-2">
-                {current.options.map((option) => {
-                  const selected = currentAnswer?.optionIds ?? [];
-                  const atMax =
-                    current.maxSelections != null && selected.length >= current.maxSelections;
-                  return (
-                    <label
-                      key={option.id}
-                      className={cn(
-                        'flex cursor-pointer items-center gap-3 rounded-md border border-border bg-card p-3 transition-colors hover:bg-muted',
-                        selected.includes(option.id) && 'border-primary bg-primary/5',
-                        !selected.includes(option.id) && atMax && 'opacity-60',
-                      )}
-                    >
-                      <Checkbox
-                        checked={selected.includes(option.id)}
-                        disabled={!selected.includes(option.id) && atMax}
-                        onChange={(e) => {
-                          const next = e.target.checked
-                            ? [...selected, option.id]
-                            : selected.filter((id) => id !== option.id);
-                          setAnswer(current.id, { optionIds: next });
-                        }}
-                      />
-                      <span className="text-sm">
-                        {option.emoji ? <span className="mr-1.5">{option.emoji}</span> : null}
-                        {option.label}
-                      </span>
-                    </label>
-                  );
-                })}
-                {current.maxSelections ? (
-                  <p className="text-xs text-muted-foreground">
-                    Choose up to {current.maxSelections}.
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-
-            {current.responseType === 'rating' ? (
-              <div className="space-y-3">
-                <Slider
-                  label={
-                    current.ratingLabels?.[
-                      Math.min(
-                        Math.max(
-                          (currentAnswer?.value ?? current.ratingMin ?? 1) - (current.ratingMin ?? 1),
-                          0,
-                        ),
-                        (current.ratingLabels?.length ?? 1) - 1,
-                      )
-                    ] ?? 'Your rating'
-                  }
-                  min={current.ratingMin ?? 1}
-                  max={current.ratingMax ?? 5}
-                  step={1}
-                  value={
-                    currentAnswer?.value ??
-                    Math.ceil(((current.ratingMin ?? 1) + (current.ratingMax ?? 5)) / 2)
-                  }
-                  onValueChange={(value) => setAnswer(current.id, { value, optionIds: undefined })}
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{current.ratingLabels?.[0] ?? current.ratingMin}</span>
-                  <span>
-                    {current.ratingLabels?.[current.ratingLabels.length - 1] ?? current.ratingMax}
-                  </span>
-                </div>
-              </div>
-            ) : null}
-
-            {current.responseType === 'short_text' ? (
-              <div className="space-y-1.5">
-                <Input
-                  value={currentAnswer?.text ?? ''}
-                  maxLength={current.maxLength ?? 300}
-                  onChange={(e) => setAnswer(current.id, { text: e.target.value })}
-                  aria-label={current.text}
-                />
+          {current.responseType === 'multi_choice' ? (
+            <div className="space-y-2">
+              {current.options.map((option) => {
+                const selected = currentAnswer?.optionIds ?? [];
+                const atMax =
+                  current.maxSelections != null && selected.length >= current.maxSelections;
+                return (
+                  <label
+                    key={option.id}
+                    className={cn(
+                      'flex cursor-pointer items-center gap-3 rounded-md border border-border bg-card p-3 transition-colors hover:bg-muted',
+                      selected.includes(option.id) && 'border-primary bg-primary/5',
+                      !selected.includes(option.id) && atMax && 'opacity-60',
+                    )}
+                  >
+                    <Checkbox
+                      checked={selected.includes(option.id)}
+                      disabled={!selected.includes(option.id) && atMax}
+                      onChange={(e) => {
+                        const next = e.target.checked
+                          ? [...selected, option.id]
+                          : selected.filter((id) => id !== option.id);
+                        setAnswer(current.id, { optionIds: next });
+                      }}
+                    />
+                    <span className="text-sm">
+                      {option.emoji ? <span className="mr-1.5">{option.emoji}</span> : null}
+                      {option.label}
+                    </span>
+                  </label>
+                );
+              })}
+              {current.maxSelections ? (
                 <p className="text-xs text-muted-foreground">
-                  {(currentAnswer?.text ?? '').length}/{current.maxLength ?? 300}
+                  Choose up to {current.maxSelections}.
                 </p>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
+          ) : null}
 
-            {showErrors && !answered ? (
-              <p role="alert" className="text-sm text-destructive">
-                Please answer this question to continue.
+          {current.responseType === 'rating' ? (
+            <div className="space-y-3">
+              <Slider
+                label={
+                  current.ratingLabels?.[
+                    Math.min(
+                      Math.max(
+                        (currentAnswer?.value ?? current.ratingMin ?? 1) - (current.ratingMin ?? 1),
+                        0,
+                      ),
+                      (current.ratingLabels?.length ?? 1) - 1,
+                    )
+                  ] ?? 'Your rating'
+                }
+                min={current.ratingMin ?? 1}
+                max={current.ratingMax ?? 5}
+                step={1}
+                value={effectiveRating(current, currentAnswer)}
+                onValueChange={(value) => setAnswer(current.id, { value, optionIds: undefined })}
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{current.ratingLabels?.[0] ?? current.ratingMin}</span>
+                <span>
+                  {current.ratingLabels?.[current.ratingLabels.length - 1] ?? current.ratingMax}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          {current.responseType === 'short_text' ? (
+            <div className="space-y-1.5">
+              <Input
+                value={currentAnswer?.text ?? ''}
+                maxLength={current.maxLength ?? 300}
+                onChange={(e) => setAnswer(current.id, { text: e.target.value })}
+                aria-label={current.text}
+              />
+              <p className="text-xs text-muted-foreground">
+                {(currentAnswer?.text ?? '').length}/{current.maxLength ?? 300}
               </p>
-            ) : null}
-          </fieldset>
+            </div>
+          ) : null}
+
+          {showErrors && !answered ? (
+            <p role="alert" className="text-sm text-destructive">
+              Please answer this question to continue.
+            </p>
+          ) : null}
+        </fieldset>
       </motion.div>
 
       <div className="flex items-center justify-between">

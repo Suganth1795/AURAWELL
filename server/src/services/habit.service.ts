@@ -1,4 +1,5 @@
-import { Habit, HabitEntry, type UserDoc } from '../models/index.js';
+import { Habit, HabitEntry, type HabitEntryDoc, type UserDoc } from '../models/index.js';
+import type { Types } from 'mongoose';
 import { HttpError } from '../middleware/error.js';
 import { dayKey } from '../utils/dates.js';
 import { touchDailyActivity, type TouchResult } from './wellness.service.js';
@@ -117,35 +118,61 @@ function prevDay(key: string): string {
   return dayKey(date);
 }
 
-export async function listHabits(user: UserDoc, includeArchived = false): Promise<HabitWithProgress[]> {
+export async function listHabits(
+  user: UserDoc,
+  includeArchived = false,
+): Promise<HabitWithProgress[]> {
   const filter: Record<string, unknown> = { userId: user._id, deletedAt: null };
   if (!includeArchived) filter.archived = false;
   const habits = await Habit.find(filter).sort({ createdAt: 1 });
 
   const today = dayKey();
   const week = isoWeekKey(today);
-  const results: HabitWithProgress[] = [];
 
-  for (const habit of habits) {
-    const entries = await HabitEntry.find({ habitId: habit._id, completed: true }).select('dayKey');
-    const days = new Set(entries.map((e) => e.dayKey));
+  // Fetch every habit's completed days in a single query rather than one per
+  // habit (avoids an N+1 pattern for users with many habits).
+  const habitIds = habits.map((habit) => habit._id);
+  const entries = habitIds.length
+    ? await HabitEntry.find({ habitId: { $in: habitIds }, completed: true }).select(
+        'habitId dayKey',
+      )
+    : [];
+
+  const daysByHabit = new Map<string, Set<string>>();
+  for (const entry of entries) {
+    const key = String(entry.habitId);
+    let set = daysByHabit.get(key);
+    if (!set) {
+      set = new Set<string>();
+      daysByHabit.set(key, set);
+    }
+    set.add(entry.dayKey);
+  }
+
+  return habits.map((habit) => {
+    const days = daysByHabit.get(String(habit._id)) ?? new Set<string>();
     const streak = computeStreak(days, today);
     const completionsThisWeek = [...days].filter((k) => isoWeekKey(k) === week).length;
-    const recentDays = lastSevenDays(today).map((key) => ({ dayKey: key, completed: days.has(key) }));
+    const recentDays = lastSevenDays(today).map((key) => ({
+      dayKey: key,
+      completed: days.has(key),
+    }));
 
-    results.push({
+    return {
       ...toDto(habit),
       currentStreak: streak.current,
       longestStreak: streak.longest,
       completedToday: days.has(today),
       completionsThisWeek,
       weeklyTarget:
-        habit.frequency === 'daily' ? 7 : habit.frequency === 'weekly' ? habit.targetPerPeriod : habit.targetPerPeriod,
+        habit.frequency === 'daily'
+          ? 7
+          : habit.frequency === 'weekly'
+            ? habit.targetPerPeriod
+            : habit.targetPerPeriod,
       recentDays,
-    });
-  }
-
-  return results;
+    };
+  });
 }
 
 function lastSevenDays(today: string): string[] {
@@ -173,7 +200,11 @@ export async function createHabit(user: UserDoc, input: HabitInput): Promise<Hab
   return toDto(habit);
 }
 
-export async function updateHabit(user: UserDoc, id: string, input: Partial<HabitInput> & { archived?: boolean }): Promise<HabitDto> {
+export async function updateHabit(
+  user: UserDoc,
+  id: string,
+  input: Partial<HabitInput> & { archived?: boolean },
+): Promise<HabitDto> {
   const habit = await Habit.findOne({ _id: id, userId: user._id, deletedAt: null });
   if (!habit) throw new HttpError(404, 'Habit not found', 'not_found');
   if (input.name !== undefined) habit.name = input.name;
@@ -221,15 +252,41 @@ export async function toggleHabitEntry(
     return { entryId: null, dayKey: day, completed: false, reward: null };
   }
 
-  const entry = await HabitEntry.findOneAndUpdate(
-    { habitId: habit._id, dayKey: day },
-    {
-      $set: { userId: user._id, completed: true, note: options.note },
-      $setOnInsert: { habitId: habit._id, dayKey: day },
-    },
-    { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
-  );
+  const entry = await upsertHabitEntry(user, habit._id, day, options.note);
 
   const reward = await touchDailyActivity(user);
   return { entryId: String(entry._id), dayKey: day, completed: true, reward };
+}
+
+/**
+ * Idempotently records a completion for {habitId, dayKey}. A concurrent
+ * double-tap can race the upsert into an E11000 duplicate-key error on the
+ * unique index, so we fall back to a plain update when that happens.
+ */
+async function upsertHabitEntry(
+  user: UserDoc,
+  habitId: Types.ObjectId,
+  day: string,
+  note?: string,
+): Promise<HabitEntryDoc> {
+  try {
+    const created = await HabitEntry.findOneAndUpdate(
+      { habitId, dayKey: day },
+      {
+        $set: { userId: user._id, completed: true, note },
+        $setOnInsert: { habitId, dayKey: day },
+      },
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
+    );
+    if (created) return created;
+  } catch (error) {
+    if ((error as { code?: number }).code !== 11000) throw error;
+  }
+  const existing = await HabitEntry.findOneAndUpdate(
+    { habitId, dayKey: day },
+    { $set: { userId: user._id, completed: true, note } },
+    { returnDocument: 'after' },
+  );
+  if (!existing) throw new HttpError(500, 'Could not record habit entry', 'habit_entry_failed');
+  return existing;
 }

@@ -139,4 +139,15 @@ describe('notifications API', () => {
       await createNotification(updated, { type: 'achievement', title: 'Nice' }),
     ).not.toBeNull();
   });
+
+  it('treats unreadOnly=false as false rather than truthy', async () => {
+    const { client, id } = await registerAdult();
+    await seedNotification(id, { type: 'system', title: 'Unread' });
+    const read = await seedNotification(id, { type: 'system', title: 'Read' });
+    await client.post(`/api/notifications/${read}/read`);
+
+    const res = await client.get('/api/notifications?unreadOnly=false');
+    expect(res.status).toBe(200);
+    expect(res.body.data.items).toHaveLength(2);
+  });
 });

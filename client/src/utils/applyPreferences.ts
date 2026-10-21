@@ -9,6 +9,7 @@ export function applyPreferences(preferences: UserPreferences | null | undefined
   if (!preferences) {
     root.removeAttribute('data-contrast');
     root.removeAttribute('data-theme');
+    root.removeAttribute('data-reduce-motion');
     root.style.removeProperty('--app-font-scale');
     root.style.colorScheme = '';
     return;
@@ -26,6 +27,12 @@ export function applyPreferences(preferences: UserPreferences | null | undefined
   } else {
     root.removeAttribute('data-theme');
     root.style.colorScheme = '';
+  }
+
+  if (preferences.reduceMotion) {
+    root.setAttribute('data-reduce-motion', 'true');
+  } else {
+    root.removeAttribute('data-reduce-motion');
   }
 
   root.style.setProperty('--app-font-scale', String(preferences.fontScale));

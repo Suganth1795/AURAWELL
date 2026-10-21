@@ -27,22 +27,31 @@ export function CounselingPage(): React.JSX.Element {
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function startConversation(): Promise<void> {
     setStarting(true);
+    setActionError(null);
     try {
       const session = await counselingService.createSession();
       setActiveId(session.id);
       reload();
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : 'Could not start a conversation.');
     } finally {
       setStarting(false);
     }
   }
 
   async function removeSession(id: string): Promise<void> {
-    await counselingService.deleteSession(id);
-    if (activeId === id) setActiveId(null);
-    reload();
+    setActionError(null);
+    try {
+      await counselingService.deleteSession(id);
+      if (activeId === id) setActiveId(null);
+      reload();
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : 'Could not delete that conversation.');
+    }
   }
 
   return (
@@ -57,6 +66,7 @@ export function CounselingPage(): React.JSX.Element {
       </div>
 
       {error ? <Alert variant="error">{error.message}</Alert> : null}
+      {actionError ? <Alert variant="error">{actionError}</Alert> : null}
       {loading ? <LoadingState label="Loading AURA…" /> : null}
 
       {data ? (
@@ -69,13 +79,17 @@ export function CounselingPage(): React.JSX.Element {
 
           {!data.status.configured ? (
             <Alert variant="warning" role="status">
-              AURA is running in offline reflection mode. Replies are generated on our servers without
-              sending anything to an external AI provider.
+              AURA is running in offline reflection mode. Replies are generated on our servers
+              without sending anything to an external AI provider.
             </Alert>
           ) : null}
 
           {activeId ? (
-            <ChatView sessionId={activeId} onBack={() => setActiveId(null)} />
+            <ChatView
+              sessionId={activeId}
+              crisisResources={data.intro.crisisResources}
+              onBack={() => setActiveId(null)}
+            />
           ) : (
             <div className="grid gap-4 lg:grid-cols-2">
               <Card>
@@ -182,9 +196,11 @@ export function SupportPanel({
 
 function ChatView({
   sessionId,
+  crisisResources,
   onBack,
 }: {
   sessionId: string;
+  crisisResources: { region: string; name: string; contact: string }[];
   onBack: () => void;
 }): React.JSX.Element {
   const { data, error, loading, reload } = useAsync(
@@ -194,7 +210,24 @@ function ChatView({
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
-  const [crisisSeen, setCrisisSeen] = useState(false);
+  const [sentCrisis, setSentCrisis] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  const crisisSeen =
+    sentCrisis || Boolean(data?.messages.some((m) => m.safetyLevel === 'crisis_support'));
+
+  async function handleClose(): Promise<void> {
+    setClosing(true);
+    setSendError(null);
+    try {
+      await counselingService.closeSession(sessionId);
+      reload();
+    } catch (err) {
+      setSendError(err instanceof ApiError ? err.message : 'Could not close this conversation.');
+    } finally {
+      setClosing(false);
+    }
+  }
 
   async function handleSend(): Promise<void> {
     const content = draft.trim();
@@ -204,7 +237,7 @@ function ChatView({
     try {
       const result = await counselingService.sendMessage(sessionId, content);
       setDraft('');
-      if (result.assistantMessage.safetyLevel === 'crisis_support') setCrisisSeen(true);
+      if (result.assistantMessage.safetyLevel === 'crisis_support') setSentCrisis(true);
       reload();
     } catch (err) {
       setSendError(err instanceof ApiError ? err.message : 'Could not send your message.');
@@ -219,24 +252,36 @@ function ChatView({
         <div>
           <CardTitle className="text-base">{data?.session.title ?? 'Conversation'}</CardTitle>
           <CardDescription>
-            {data?.session.status === 'closed' ? 'This conversation is closed.' : 'AURA is here to listen.'}
+            {data?.session.status === 'closed'
+              ? 'This conversation is closed.'
+              : 'AURA is here to listen.'}
           </CardDescription>
         </div>
-        <Button variant="outline" size="sm" onClick={onBack}>
-          Back
-        </Button>
+        <div className="flex items-center gap-2">
+          {data?.session.status !== 'closed' ? (
+            <Button variant="outline" size="sm" onClick={handleClose} disabled={closing}>
+              {closing ? 'Closing…' : 'Close'}
+            </Button>
+          ) : null}
+          <Button variant="outline" size="sm" onClick={onBack}>
+            Back
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {crisisSeen ? (
-          <Alert variant="error" role="alert">
-            <span className="flex items-start gap-2">
-              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>
-                It sounds like you may be going through something serious. Please reach out to a crisis
-                line or a trusted person right now — see the support panel for contacts.
+          <div className="space-y-3">
+            <Alert variant="error" role="alert">
+              <span className="flex items-start gap-2">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>
+                  It sounds like you may be going through something serious. Please reach out to a
+                  crisis line or a trusted person right now — the contacts are listed below.
+                </span>
               </span>
-            </span>
-          </Alert>
+            </Alert>
+            <SupportPanel resources={crisisResources} />
+          </div>
         ) : null}
 
         {error ? <Alert variant="error">{error.message}</Alert> : null}
@@ -255,7 +300,9 @@ function ChatView({
         ) : null}
 
         {data?.session.status === 'closed' ? (
-          <Alert variant="info">This conversation is closed. Start a new one to keep talking.</Alert>
+          <Alert variant="info">
+            This conversation is closed. Start a new one to keep talking.
+          </Alert>
         ) : (
           <form
             onSubmit={(e) => {
@@ -306,7 +353,10 @@ export function MessageBubble({ message }: { message: ChatMessage }): React.JSX.
         <p className="whitespace-pre-wrap">{message.content}</p>
         <div className="mt-1 flex items-center gap-2">
           <span className="text-[10px] opacity-70">
-            {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {new Date(message.createdAt).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
           </span>
           {!isUser && message.safetyLevel !== 'none' ? (
             <Badge variant="warning">Safety support</Badge>

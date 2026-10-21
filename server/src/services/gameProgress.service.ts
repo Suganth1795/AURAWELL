@@ -1,6 +1,10 @@
 import { GameSession, Recommendation, type UserDoc } from '../models/index.js';
 import { getGame, type GameDefinition } from '../data/games.js';
 import { awardXp, applyStreak, levelProgress, type LevelProgress } from './progress.service.js';
+import { dayKey } from '../utils/dates.js';
+
+/** Maximum game XP a user can earn per UTC day, regardless of how many games they play. */
+export const DAILY_GAME_XP_CAP = 300;
 
 export class GameValidationError extends Error {
   constructor(
@@ -61,10 +65,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /** Scores XP from real performance, bounded by the game's cap. Never trusted from the client. */
-function computeXp(
-  game: GameDefinition,
-  input: GameResultInput,
-): { xp: number; accuracy: number } {
+function computeXp(game: GameDefinition, input: GameResultInput): { xp: number; accuracy: number } {
   const maxScore = Math.max(1, Math.round(input.maxScore));
   const score = clamp(Math.round(input.score), 0, maxScore);
   const accuracy = score / maxScore;
@@ -77,7 +78,8 @@ function computeXp(
   const minutes = clamp(input.durationSeconds / 60, 0, game.estimatedMinutes * 2);
   const timeBonus = Math.min(8, Math.round(minutes));
 
-  const raw = game.baseXp * accuracy * difficultyFactor * completionFactor + timeBonus * completionFactor;
+  const raw =
+    game.baseXp * accuracy * difficultyFactor * completionFactor + timeBonus * completionFactor;
   const xp = Math.round(clamp(raw, 0, game.maxXp));
   return { xp, accuracy };
 }
@@ -112,11 +114,17 @@ function toSessionDto(session: {
  * Records a play session, awards XP/streak, and marks matching game
  * recommendations as completed. Idempotent per idempotencyKey.
  */
-export async function recordGameResult(user: UserDoc, input: GameResultInput): Promise<GameOutcome> {
+export async function recordGameResult(
+  user: UserDoc,
+  input: GameResultInput,
+): Promise<GameOutcome> {
   const game = getGame(input.gameCode);
   if (!game) throw new GameValidationError('Unknown game', 'unknown_game');
   if (!game.ageGroups.includes(user.ageGroup)) {
-    throw new GameValidationError('This game is not available for your age group', 'age_restricted');
+    throw new GameValidationError(
+      'This game is not available for your age group',
+      'age_restricted',
+    );
   }
   if (input.maxScore < 0 || input.score < 0) {
     throw new GameValidationError('Score values must be positive', 'invalid_score');
@@ -132,7 +140,8 @@ export async function recordGameResult(user: UserDoc, input: GameResultInput): P
       idempotencyKey: input.idempotencyKey,
     });
     if (existing) {
-      const streak = applyStreak(user);
+      // Nothing new is awarded on a repeat, so report the stored streak rather
+      // than mutating (and not persisting) the user document.
       return {
         session: toSessionDto(existing),
         reward: {
@@ -140,8 +149,8 @@ export async function recordGameResult(user: UserDoc, input: GameResultInput): P
           xp: user.wellness.xp,
           level: user.wellness.level,
           leveledUp: false,
-          streakDays: streak.streakDays,
-          longestStreak: streak.longestStreak,
+          streakDays: user.wellness.streakDays,
+          longestStreak: user.wellness.longestStreak,
           streakExtended: false,
           streakFreezeUsed: false,
         },
@@ -154,6 +163,17 @@ export async function recordGameResult(user: UserDoc, input: GameResultInput): P
   const { xp, accuracy } = computeXp(game, input);
   const maxScore = Math.max(0, Math.round(input.maxScore));
 
+  // Enforce a daily XP ceiling so repeated max-score submissions cannot farm
+  // unlimited progress. The counter resets when the UTC day changes.
+  const today = dayKey();
+  if (user.wellness.gameXpDay !== today) {
+    user.wellness.gameXpDay = today;
+    user.wellness.gameXpToday = 0;
+  }
+  const remainingDaily = Math.max(0, DAILY_GAME_XP_CAP - user.wellness.gameXpToday);
+  const grantedXp = Math.min(xp, remainingDaily);
+  user.wellness.gameXpToday += grantedXp;
+
   const session = await GameSession.create({
     userId: user.id,
     gameCode: game.code,
@@ -163,15 +183,15 @@ export async function recordGameResult(user: UserDoc, input: GameResultInput): P
     durationSeconds: clamp(Math.round(input.durationSeconds), 0, 7200),
     completed: Boolean(input.completed),
     summary: { ...(input.summary ?? {}), accuracy },
-    xpAwarded: xp,
-    rewarded: xp > 0,
+    xpAwarded: grantedXp,
+    rewarded: grantedXp > 0,
     // Omit the field entirely when absent so the sparse unique index is skipped.
     ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
     playedAt: new Date(),
   });
 
   const streak = applyStreak(user);
-  const xpResult = awardXp(user, xp);
+  const xpResult = awardXp(user, grantedXp);
 
   // Completing the matching game clears any outstanding game recommendation.
   await Recommendation.updateMany(

@@ -41,7 +41,8 @@ describe('analytics helpers', () => {
 
 describe('privacy helpers', () => {
   it('humanises consent type identifiers', () => {
-    expect(formatConsentType('ai_wellness_data')).toBe('Ai Wellness Data');
-    expect(formatConsentType('terms_of_service')).toBe('Terms Of Service');
+    expect(formatConsentType('ai_wellness_data')).toBe('AI wellness data');
+    expect(formatConsentType('terms_of_service')).toBe('Terms of service');
+    expect(formatConsentType('some_unknown_type')).toBe('Some Unknown Type');
   });
 });

@@ -13,30 +13,33 @@ export function CalmDragon({ game, onFinish, onExit }: GameComponentProps): Reac
   const [running, setRunning] = useState(false);
   const [tick, setTick] = useState(0);
   const timer = useRef<number | null>(null);
+  const finishedRef = useRef(false);
 
   // A single ticking clock; phase, cycle and countdown are all derived from it.
   useEffect(() => {
     if (!running) return;
     timer.current = window.setInterval(() => {
-      setTick((t) => {
-        const next = t + 1;
-        if (next >= totalSeconds) {
-          setRunning(false);
-          onFinish({
-            score: cycles,
-            maxScore: cycles,
-            completed: true,
-            summary: { cycles, breathIn, breathOut },
-          });
-          return totalSeconds;
-        }
-        return next;
-      });
+      setTick((t) => Math.min(t + 1, totalSeconds));
     }, 1000);
     return () => {
       if (timer.current) window.clearInterval(timer.current);
     };
-  }, [running, totalSeconds, cycles, breathIn, breathOut, onFinish]);
+  }, [running, totalSeconds]);
+
+  // Complete exactly once when the clock reaches the target, outside the state
+  // updater so the callback is not invoked during a render/updater phase.
+  useEffect(() => {
+    if (running && tick >= totalSeconds && !finishedRef.current) {
+      finishedRef.current = true;
+      setRunning(false);
+      onFinish({
+        score: cycles,
+        maxScore: cycles,
+        completed: true,
+        summary: { cycles, breathIn, breathOut },
+      });
+    }
+  }, [running, tick, totalSeconds, cycles, breathIn, breathOut, onFinish]);
 
   const done = tick >= totalSeconds;
   const cycle = Math.min(Math.floor(tick / cycleSeconds), cycles);
@@ -61,9 +64,7 @@ export function CalmDragon({ game, onFinish, onExit }: GameComponentProps): Reac
             Pause
           </Button>
         ) : (
-          <Button onClick={() => setRunning(true)}>
-            {tick > 0 ? 'Keep breathing' : 'Begin'}
-          </Button>
+          <Button onClick={() => setRunning(true)}>{tick > 0 ? 'Keep breathing' : 'Begin'}</Button>
         )
       }
     >
@@ -80,7 +81,13 @@ export function CalmDragon({ game, onFinish, onExit }: GameComponentProps): Reac
           🐉
         </div>
         <p className="text-lg font-medium" aria-live="polite">
-          {running ? (growing ? 'Breathe in…' : 'Breathe out…') : done ? 'Well done.' : 'Ready when you are.'}
+          {running
+            ? growing
+              ? 'Breathe in…'
+              : 'Breathe out…'
+            : done
+              ? 'Well done.'
+              : 'Ready when you are.'}
         </p>
         <p className="text-3xl font-semibold tabular-nums" aria-hidden="true">
           {running ? Math.max(0, secondsLeft) : breathIn}

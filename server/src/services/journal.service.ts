@@ -86,7 +86,7 @@ export async function updateJournalEntry(
 ): Promise<JournalEntryDto> {
   const doc = await JournalEntry.findOne({ _id: id, userId: user._id, deletedAt: null });
   if (!doc) throw new HttpError(404, 'Journal entry not found', 'not_found');
-  if (input.title !== undefined) doc.title = input.title;
+  if (input.title !== undefined) doc.title = input.title.trim() || null;
   if (input.content !== undefined) doc.content = input.content;
   if (input.tags !== undefined) doc.tags = input.tags;
   await doc.save();

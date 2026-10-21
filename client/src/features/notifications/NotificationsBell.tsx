@@ -12,27 +12,41 @@ import type { AppNotification } from '@/features/notifications/types';
 export function NotificationsBell(): React.JSX.Element {
   const { data, error, loading, reload } = useAsync(() => notificationService.list(15), []);
   const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const unread = data?.unreadCount ?? 0;
 
   async function markRead(id: string): Promise<void> {
-    await notificationService.markRead(id);
-    reload();
+    setActionError(null);
+    try {
+      await notificationService.markRead(id);
+      reload();
+    } catch {
+      setActionError('Could not update that notification. Please try again.');
+    }
   }
 
   async function markAll(): Promise<void> {
     setBusy(true);
+    setActionError(null);
     try {
       await notificationService.markAllRead();
       reload();
+    } catch {
+      setActionError('Could not mark all as read. Please try again.');
     } finally {
       setBusy(false);
     }
   }
 
   async function remove(id: string): Promise<void> {
-    await notificationService.remove(id);
-    reload();
+    setActionError(null);
+    try {
+      await notificationService.remove(id);
+      reload();
+    } catch {
+      setActionError('Could not delete that notification. Please try again.');
+    }
   }
 
   return (
@@ -68,6 +82,7 @@ export function NotificationsBell(): React.JSX.Element {
       </div>
 
       {error ? <Alert variant="error">{error.message}</Alert> : null}
+      {actionError ? <Alert variant="error">{actionError}</Alert> : null}
       {loading ? <LoadingState label="Loading…" /> : null}
 
       {data ? (

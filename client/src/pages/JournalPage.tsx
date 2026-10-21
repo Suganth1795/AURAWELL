@@ -26,7 +26,10 @@ export function JournalPage(): React.JSX.Element {
   const applyReward = useApplyReward();
 
   const { data, error, loading, reload } = useAsync(async () => {
-    const [prompts, entries] = await Promise.all([journalService.prompts(), journalService.list(1, 20)]);
+    const [prompts, entries] = await Promise.all([
+      journalService.prompts(),
+      journalService.list(1, 20),
+    ]);
     return { prompts, entries };
   }, []);
 
@@ -60,7 +63,7 @@ export function JournalPage(): React.JSX.Element {
     try {
       if (editingId) {
         await journalService.update(editingId, {
-          title: title.trim() || undefined,
+          title: title.trim(),
           content: content.trim(),
           tags,
         });
@@ -93,9 +96,14 @@ export function JournalPage(): React.JSX.Element {
   }
 
   async function handleDelete(id: string): Promise<void> {
-    await journalService.remove(id);
-    if (editingId === id) resetForm();
-    reload();
+    setSaveError(null);
+    try {
+      await journalService.remove(id);
+      if (editingId === id) resetForm();
+      reload();
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : 'Could not delete that entry.');
+    }
   }
 
   return (
@@ -111,9 +119,7 @@ export function JournalPage(): React.JSX.Element {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              {editingId ? 'Edit entry' : 'New entry'}
-            </CardTitle>
+            <CardTitle className="text-base">{editingId ? 'Edit entry' : 'New entry'}</CardTitle>
             <CardDescription>
               {editingId
                 ? 'Update your writing and save when ready.'
@@ -198,7 +204,13 @@ export function JournalPage(): React.JSX.Element {
           <CardContent>
             {error ? <Alert variant="error">{error.message}</Alert> : null}
             {loading ? <LoadingState label="Loading your journal…" /> : null}
-            {data ? <JournalList entries={data.entries.items} onEdit={startEdit} onDelete={handleDelete} /> : null}
+            {data ? (
+              <JournalList
+                entries={data.entries.items}
+                onEdit={startEdit}
+                onDelete={handleDelete}
+              />
+            ) : null}
           </CardContent>
         </Card>
       </div>
@@ -225,7 +237,9 @@ function JournalList({
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="font-medium">{entry.title ?? 'Untitled'}</p>
-              <p className="text-xs text-muted-foreground">{new Date(entry.createdAt).toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">
+                {new Date(entry.createdAt).toLocaleString()}
+              </p>
             </div>
             <div className="flex gap-1">
               <Button variant="ghost" size="sm" onClick={() => onEdit(entry)}>

@@ -235,4 +235,49 @@ describe('games API (MindPlay)', () => {
     expect(stats.body.data.progress).toHaveProperty('xpForNextLevel');
     expect(JSON.stringify(stats.body.data)).not.toMatch(/leaderboard|rank|other users/i);
   });
+
+  it('caps total game XP per UTC day regardless of how many games are played', async () => {
+    const client = await registerAdult();
+    const single = {
+      difficulty: 5,
+      score: 5000,
+      maxScore: 5000,
+      durationSeconds: 7200,
+      completed: true,
+    };
+    let totalAwarded = 0;
+    // Play far more than the daily cap allows; each session is near game.maxXp.
+    for (let i = 0; i < 20; i += 1) {
+      const res = await client.post('/api/games/sessions', {
+        ...single,
+        gameCode: 'calm-dragon',
+      });
+      expect(res.status).toBe(201);
+      totalAwarded += res.body.data.reward.awardedXp as number;
+    }
+    const { DAILY_GAME_XP_CAP } = await import('../src/services/gameProgress.service.js');
+    expect(totalAwarded).toBeLessThanOrEqual(DAILY_GAME_XP_CAP);
+  });
+
+  it('does not mutate persisted streak state on a duplicate submission', async () => {
+    const client = await registerAdult();
+    const payload = {
+      gameCode: 'focus-quest',
+      difficulty: 1,
+      score: 5,
+      maxScore: 5,
+      durationSeconds: 60,
+      completed: true,
+      idempotencyKey: 'dup-streak',
+    };
+    const first = await client.post('/api/games/sessions', payload);
+    const streakAfterFirst = first.body.data.reward.streakDays;
+
+    const duplicate = await client.post('/api/games/sessions', payload);
+    expect(duplicate.body.data.duplicate).toBe(true);
+    const stats = await client.get('/api/games/stats');
+    expect(stats.body.data.progress.level).toBeGreaterThanOrEqual(1);
+    // The duplicate response must reflect stored state, not an unpersisted bump.
+    expect(duplicate.body.data.reward.streakDays).toBe(streakAfterFirst);
+  });
 });

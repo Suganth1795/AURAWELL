@@ -51,7 +51,12 @@ describe('AssessmentRunner', () => {
   it('shows the intro before starting', () => {
     render(
       <MemoryRouter>
-        <AssessmentRunner assessment={assessment} submitting={false} error={null} onSubmit={() => {}} />
+        <AssessmentRunner
+          assessment={assessment}
+          submitting={false}
+          error={null}
+          onSubmit={() => {}}
+        />
       </MemoryRouter>,
     );
     expect(screen.getByText('This is a demo check-in.')).toBeInTheDocument();
@@ -62,7 +67,12 @@ describe('AssessmentRunner', () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter>
-        <AssessmentRunner assessment={assessment} submitting={false} error={null} onSubmit={() => {}} />
+        <AssessmentRunner
+          assessment={assessment}
+          submitting={false}
+          error={null}
+          onSubmit={() => {}}
+        />
       </MemoryRouter>,
     );
     await user.click(screen.getByRole('button', { name: /begin/i }));
@@ -75,7 +85,12 @@ describe('AssessmentRunner', () => {
     const onSubmit = vi.fn();
     render(
       <MemoryRouter>
-        <AssessmentRunner assessment={assessment} submitting={false} error={null} onSubmit={onSubmit} />
+        <AssessmentRunner
+          assessment={assessment}
+          submitting={false}
+          error={null}
+          onSubmit={onSubmit}
+        />
       </MemoryRouter>,
     );
     await user.click(screen.getByRole('button', { name: /begin/i }));
@@ -96,13 +111,55 @@ describe('AssessmentRunner', () => {
     const onSubmit = vi.fn();
     render(
       <MemoryRouter>
-        <AssessmentRunner assessment={assessment} submitting={false} error={null} onSubmit={onSubmit} />
+        <AssessmentRunner
+          assessment={assessment}
+          submitting={false}
+          error={null}
+          onSubmit={onSubmit}
+        />
       </MemoryRouter>,
     );
     await user.click(screen.getByRole('button', { name: /begin/i }));
     await user.click(screen.getByLabelText('Low'));
     await user.click(screen.getByRole('button', { name: /next/i }));
     expect(screen.getByText('Tell me more')).toBeInTheDocument();
+  });
+
+  it('lets a rating question be submitted with its displayed default value', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    const ratingAssessment: AssessmentDetail = {
+      ...assessment,
+      estimatedMinutes: 1,
+      questions: [
+        {
+          id: 'r1',
+          text: 'Rate how rested you feel',
+          responseType: 'rating',
+          required: true,
+          ratingMin: 1,
+          ratingMax: 5,
+          ratingLabels: ['Very tired', 'Tired', 'Okay', 'Rested', 'Very rested'],
+          options: [],
+        },
+      ],
+    };
+    render(
+      <MemoryRouter>
+        <AssessmentRunner
+          assessment={ratingAssessment}
+          submitting={false}
+          error={null}
+          onSubmit={onSubmit}
+        />
+      </MemoryRouter>,
+    );
+    await user.click(screen.getByRole('button', { name: /begin/i }));
+    // No dragging: the slider already shows a value, so results must be reachable.
+    await user.click(screen.getByRole('button', { name: /see my results/i }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    const answers = onSubmit.mock.calls[0][0];
+    expect(answers).toEqual([{ questionId: 'r1', value: 3 }]);
   });
 });
 

@@ -14,8 +14,8 @@ export class HttpError extends Error {
   }
 }
 
-export const notFoundHandler: RequestHandler = (req, res) => {
-  res.status(404).json({ error: { message: 'Route not found', code: 'not_found', path: req.path } });
+export const notFoundHandler: RequestHandler = (_req, res) => {
+  res.status(404).json({ error: { message: 'Route not found', code: 'not_found' } });
 };
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {

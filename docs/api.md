@@ -94,7 +94,9 @@ Submitting returns summary, priorities, indicators, enriched suggestions, a
 
 Result body: `{ gameCode, difficulty, score, maxScore, durationSeconds,
 completed, summary?, idempotencyKey? }`. Supplying the same `idempotencyKey`
-again returns the prior outcome without granting XP twice. Age-restricted games
+again returns the prior outcome without granting XP twice. Awards are bounded by
+the game's ceiling and a per-UTC-day cap (`DAILY_GAME_XP_CAP`, 300 XP), so
+repeated submissions cannot farm unrestricted progress. Age-restricted games
 return `403 age_restricted`.
 
 ## Wellness — `/api/wellness` (auth required)

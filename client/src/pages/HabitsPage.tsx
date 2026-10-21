@@ -13,7 +13,12 @@ import { ApiError } from '@/services/api';
 import { habitService, type HabitInput } from '@/features/wellness/wellnessService';
 import { RewardNote } from '@/features/wellness/RewardNote';
 import { useApplyReward } from '@/features/wellness/useApplyReward';
-import type { Habit, HabitCategory, HabitFrequency, RewardSummary } from '@/features/wellness/types';
+import type {
+  Habit,
+  HabitCategory,
+  HabitFrequency,
+  RewardSummary,
+} from '@/features/wellness/types';
 
 const CATEGORY_LABELS: Record<HabitCategory, string> = {
   sleep: 'Sleep',
@@ -73,24 +78,37 @@ export function HabitsPage(): React.JSX.Element {
 
   async function handleToggle(habit: Habit, dayKey: string, completed: boolean): Promise<void> {
     setBusyId(habit.id);
+    setSaveError(null);
     try {
       const result = await habitService.toggle(habit.id, completed, dayKey);
       setReward(result.reward);
       applyReward(result.reward);
       reload();
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : 'Could not update that habit.');
     } finally {
       setBusyId(null);
     }
   }
 
   async function handleArchive(habit: Habit): Promise<void> {
-    await habitService.update(habit.id, { archived: !habit.archived });
-    reload();
+    setSaveError(null);
+    try {
+      await habitService.update(habit.id, { archived: !habit.archived });
+      reload();
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : 'Could not update that habit.');
+    }
   }
 
   async function handleDelete(id: string): Promise<void> {
-    await habitService.remove(id);
-    reload();
+    setSaveError(null);
+    try {
+      await habitService.remove(id);
+      reload();
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : 'Could not delete that habit.');
+    }
   }
 
   return (
