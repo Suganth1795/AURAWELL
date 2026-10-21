@@ -30,7 +30,7 @@ export function Popover({
           <BasePopover.Popup
             aria-labelledby={titleId}
             className={cn(
-              'w-[min(22rem,92vw)] rounded-lg border border-border bg-card p-4 shadow-lg outline-none',
+              'w-[min(22rem,92vw)] rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-elevated)] outline-none',
               className,
             )}
           >

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MessageSquarePlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -70,13 +71,10 @@ export function MoodPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Mood</h1>
-        <p className="text-sm text-muted-foreground">
-          Check in with how you feel. There are no right or wrong answers, and nothing is shared
-          with anyone.
-        </p>
-      </div>
+      <PageHeader
+        title="Mood"
+        description="Check in with how you feel. There are no right or wrong answers, and nothing is shared with anyone."
+      />
 
       <Card>
         <CardHeader>

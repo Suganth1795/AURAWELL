@@ -9,6 +9,8 @@ import { Modal } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LoadingState } from '@/components/ui/spinner';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/layout/EmptyState';
 import { useAsync } from '@/hooks/useAsync';
 import { api, ApiError } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
@@ -71,19 +73,19 @@ export function PrivacyPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Privacy centre</h1>
-        <p className="text-sm text-muted-foreground">
-          Your data belongs to you. Review consent, download a copy, or delete your account.
-        </p>
-      </div>
+      <PageHeader
+        title="Privacy centre"
+        description="Your data belongs to you. Review consent, download a copy, or delete your account."
+      />
 
       {error ? (
         <Alert variant="error">
-          {error.message}{' '}
-          <button type="button" className="underline" onClick={reload}>
-            Retry
-          </button>
+          <span className="flex flex-wrap items-center justify-between gap-2">
+            <span>{error.message}</span>
+            <Button variant="outline" size="sm" onClick={reload}>
+              Retry
+            </Button>
+          </span>
         </Alert>
       ) : null}
       {loading ? <LoadingState label="Loading your privacy settings…" /> : null}
@@ -132,7 +134,7 @@ export function PrivacyPage(): React.JSX.Element {
             </CardHeader>
             <CardContent>
               {data.consents.history.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No consent records yet.</p>
+                <EmptyState title="No consent records yet" description="Consent decisions will appear here once recorded." />
               ) : (
                 <ul className="space-y-2 text-sm">
                   {data.consents.history.map((item) => (
@@ -166,7 +168,7 @@ export function PrivacyPage(): React.JSX.Element {
             <CardContent>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {COUNT_LABELS.map(({ key, label }) => (
-                  <div key={key} className="rounded-md border p-3">
+                  <div key={key} className="rounded-xl border border-border bg-card/60 p-3">
                     <p className="text-xs text-muted-foreground">{label}</p>
                     <p className="text-lg font-semibold">
                       {(data.counts as Record<string, number>)[key] ?? 0}

@@ -34,11 +34,14 @@ export function MiniBarChart({
     <div
       role="img"
       aria-label={ariaLabel}
-      className={cn('flex items-end gap-1', className)}
+      className={cn('flex items-end gap-0.5 sm:gap-1', className)}
       style={{ height }}
     >
       {data.map((datum) => (
-        <div key={datum.label} className="flex flex-1 flex-col items-center justify-end gap-1">
+        <div
+          key={datum.label}
+          className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1"
+        >
           <div
             className={cn(
               'w-full rounded-t bg-primary/70',
@@ -47,7 +50,10 @@ export function MiniBarChart({
             style={{ height: `${Math.round((datum.value ?? 0) * 100)}%`, minHeight: datum.value === null ? 2 : 4 }}
             title={datum.caption}
           />
-          <span className="text-[10px] text-muted-foreground" aria-hidden="true">
+          <span
+            className="w-full overflow-hidden text-center text-[10px] leading-none text-muted-foreground"
+            aria-hidden="true"
+          >
             {datum.label}
           </span>
         </div>

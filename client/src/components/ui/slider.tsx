@@ -5,6 +5,7 @@ import { cn } from '@/utils/cn';
 export function Slider({
   value,
   onValueChange,
+  onCommittedChange,
   min = 0,
   max = 100,
   step = 1,
@@ -13,6 +14,7 @@ export function Slider({
 }: {
   value: number;
   onValueChange: (value: number) => void;
+  onCommittedChange?: (value: number) => void;
   min?: number;
   max?: number;
   step?: number;
@@ -23,6 +25,7 @@ export function Slider({
     <BaseSlider.Root
       value={[value]}
       onValueChange={(next) => onValueChange(Number(next[0]))}
+      onValueCommitted={onCommittedChange ? (next) => onCommittedChange(Number(next)) : undefined}
       min={min}
       max={max}
       step={step}
@@ -38,7 +41,7 @@ export function Slider({
         </BaseSlider.Track>
         <BaseSlider.Thumb
           aria-label={label}
-          className="block h-5 w-5 rounded-full border-2 border-primary bg-card shadow focus-visible:outline-2 focus-visible:outline-ring"
+          className="block h-5 w-5 rounded-full border-2 border-primary bg-card shadow-[var(--shadow-card)] focus-visible:outline-2 focus-visible:outline-ring"
         />
       </BaseSlider.Control>
     </BaseSlider.Root>

@@ -21,10 +21,10 @@ export function Modal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/50 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
+        <Dialog.Backdrop className="fixed inset-0 z-40 bg-scrim backdrop-blur-sm data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
         <Dialog.Popup
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 max-h-[85dvh] w-[min(32rem,92vw)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-card p-5 shadow-lg data-[ending-style]:scale-95 data-[starting-style]:scale-95',
+            'fixed left-1/2 top-1/2 z-50 max-h-[85dvh] w-[min(32rem,92vw)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elevated)] data-[ending-style]:scale-95 data-[starting-style]:scale-95',
             className,
           )}
         >
@@ -39,7 +39,7 @@ export function Modal({
             </div>
             <Dialog.Close
               aria-label="Close dialog"
-              className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+              className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </Dialog.Close>

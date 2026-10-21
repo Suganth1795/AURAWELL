@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { applyPreferences } from '@/utils/applyPreferences';
+import { watchSystemTheme } from '@/stores/theme';
 import { setUnauthorizedHandler } from '@/services/api';
 import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/features/authentication/LoginPage';
@@ -37,6 +38,9 @@ export function AppRoutes(): React.JSX.Element {
   useEffect(() => {
     void init();
   }, [init]);
+
+  // Follow OS colour-scheme changes while the "system" theme is selected.
+  useEffect(() => watchSystemTheme(), []);
 
   // When the session expires mid-use, clear auth state and send the user to the
   // login screen instead of leaving raw errors on the page.

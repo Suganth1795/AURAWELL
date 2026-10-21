@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Alert } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { LoadingState } from '@/components/ui/spinner';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/layout/EmptyState';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useAsync } from '@/hooks/useAsync';
 import { MiniBarChart, type BarDatum } from '@/features/wellness/MiniBarChart';
@@ -49,7 +51,7 @@ function StatCard({
   return (
     <Card>
       <CardContent className="flex items-center gap-3 py-4">
-        <span className="rounded-md bg-primary/10 p-2 text-primary">{icon}</span>
+        <span className="rounded-lg bg-primary/10 p-2 text-primary">{icon}</span>
         <div>
           <p className="text-xs text-muted-foreground">{label}</p>
           <p className="text-lg font-semibold">{value}</p>
@@ -66,34 +68,34 @@ export function AnalyticsPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Wellness insights</h1>
-          <p className="text-sm text-muted-foreground">
-            A reflection of what you have logged. These are not medical measurements.
-          </p>
-        </div>
-        <div className="flex gap-2" role="group" aria-label="Time range">
-          {RANGE_OPTIONS.map((option) => (
-            <Button
-              key={option}
-              variant={option === days ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setDays(option)}
-              aria-pressed={option === days}
-            >
-              {option} days
-            </Button>
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        title="Wellness insights"
+        description="A reflection of what you have logged. These are not medical measurements."
+        actions={
+          <div className="flex gap-2" role="group" aria-label="Time range">
+            {RANGE_OPTIONS.map((option) => (
+              <Button
+                key={option}
+                variant={option === days ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setDays(option)}
+                aria-pressed={option === days}
+              >
+                {option} days
+              </Button>
+            ))}
+          </div>
+        }
+      />
 
       {error ? (
         <Alert variant="error">
-          {error.message}{' '}
-          <button type="button" className="underline" onClick={reload}>
-            Retry
-          </button>
+          <span className="flex flex-wrap items-center justify-between gap-2">
+            <span>{error.message}</span>
+            <Button variant="outline" size="sm" onClick={reload}>
+              Retry
+            </Button>
+          </span>
         </Alert>
       ) : null}
       {loading ? <LoadingState label="Building your insights…" /> : null}
@@ -150,7 +152,7 @@ export function AnalyticsPage(): React.JSX.Element {
             />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Mood trend</CardTitle>
@@ -245,14 +247,15 @@ export function AnalyticsPage(): React.JSX.Element {
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    You have not completed a check-in yet.
-                  </p>
-                  <Link to="/assessments" className={buttonVariants({ size: 'sm' })}>
-                    Start a check-in
-                  </Link>
-                </div>
+                <EmptyState
+                  title="No check-in yet"
+                  description="You have not completed a check-in yet."
+                  action={
+                    <Link to="/assessments" className={buttonVariants({ size: 'sm' })}>
+                      Start a check-in
+                    </Link>
+                  }
+                />
               )}
             </CardContent>
           </Card>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Archive, Check, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -113,17 +114,15 @@ export function HabitsPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Habits</h1>
-          <p className="text-sm text-muted-foreground">
-            Small, repeatable actions. Missing a day is okay — the goal is gentle consistency.
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => setShowArchived((v) => !v)}>
-          {showArchived ? 'Hide archived' : 'Show archived'}
-        </Button>
-      </div>
+      <PageHeader
+        title="Habits"
+        description="Small, repeatable actions. Missing a day is okay — the goal is gentle consistency."
+        actions={
+          <Button variant="outline" size="sm" onClick={() => setShowArchived((v) => !v)}>
+            {showArchived ? 'Hide archived' : 'Show archived'}
+          </Button>
+        }
+      />
 
       <Card>
         <CardHeader>

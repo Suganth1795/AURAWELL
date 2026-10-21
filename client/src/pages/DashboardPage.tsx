@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Alert } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { LoadingState } from '@/components/ui/spinner';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/layout/EmptyState';
 import { useAsync } from '@/hooks/useAsync';
 import { useAuthStore } from '@/stores/auth';
 import { analyticsService } from '@/features/analytics/analyticsService';
@@ -57,30 +59,32 @@ export function DashboardPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">{greeting(user.displayName)}</h1>
-          <p className="text-sm text-muted-foreground">
-            {isChild
-              ? 'Welcome to your space. Here are some gentle things to try.'
-              : 'A quick look at how things are going, and one step you could take.'}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Flame className="h-4 w-4 text-primary" aria-hidden="true" />
-            {user.wellness.streakDays}-day streak
-          </span>
-          <Badge variant="secondary">Level {user.wellness.level}</Badge>
-        </div>
-      </div>
+      <PageHeader
+        title={greeting(user.displayName)}
+        description={
+          isChild
+            ? 'Welcome to your space. Here are some gentle things to try.'
+            : 'A quick look at how things are going, and one step you could take.'
+        }
+        actions={
+          <>
+            <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+              <Flame className="h-4 w-4 text-primary" aria-hidden="true" />
+              {user.wellness.streakDays}-day streak
+            </span>
+            <Badge variant="secondary">Level {user.wellness.level}</Badge>
+          </>
+        }
+      />
 
       {error ? (
         <Alert variant="error">
-          {error.message}{' '}
-          <button type="button" className="underline" onClick={reload}>
-            Retry
-          </button>
+          <span className="flex flex-wrap items-center justify-between gap-2">
+            <span>{error.message}</span>
+            <Button variant="outline" size="sm" onClick={reload}>
+              Retry
+            </Button>
+          </span>
         </Alert>
       ) : null}
       {loading ? <LoadingState label="Loading your space…" /> : null}
@@ -115,14 +119,15 @@ export function DashboardPage(): React.JSX.Element {
               </CardHeader>
               <CardContent className="space-y-3">
                 {data.recommendations.length === 0 ? (
-                  <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      No suggestions right now. Complete a check-in to get personalised ideas.
-                    </p>
-                    <Link to="/assessments" className={buttonVariants({ size: 'sm' })}>
-                      Take a check-in
-                    </Link>
-                  </div>
+                  <EmptyState
+                    title="No suggestions right now"
+                    description="Complete a check-in to get personalised ideas."
+                    action={
+                      <Link to="/assessments" className={buttonVariants({ size: 'sm' })}>
+                        Take a check-in
+                      </Link>
+                    }
+                  />
                 ) : (
                   data.recommendations.map((recommendation) => (
                     <RecommendationCard
@@ -183,19 +188,19 @@ export function DashboardPage(): React.JSX.Element {
                   label={`Level ${data.overview.wellness.level}`}
                 />
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-md border p-3">
+                  <div className="rounded-xl border border-border bg-card/60 p-3">
                     <p className="text-xs text-muted-foreground">Check-ins</p>
                     <p className="text-lg font-semibold">{data.overview.totals.assessments}</p>
                   </div>
-                  <div className="rounded-md border p-3">
+                  <div className="rounded-xl border border-border bg-card/60 p-3">
                     <p className="text-xs text-muted-foreground">Games played</p>
                     <p className="text-lg font-semibold">{data.overview.totals.gameSessions}</p>
                   </div>
-                  <div className="rounded-md border p-3">
+                  <div className="rounded-xl border border-border bg-card/60 p-3">
                     <p className="text-xs text-muted-foreground">Habit check-ins</p>
                     <p className="text-lg font-semibold">{data.overview.totals.habitCheckIns}</p>
                   </div>
-                  <div className="rounded-md border p-3">
+                  <div className="rounded-xl border border-border bg-card/60 p-3">
                     <p className="text-xs text-muted-foreground">Journal entries</p>
                     <p className="text-lg font-semibold">{data.overview.totals.journalEntries}</p>
                   </div>
@@ -234,9 +239,9 @@ function RecommendationCard({
   }
 
   return (
-    <div className="rounded-md border p-3">
+    <div className="rounded-xl border border-border bg-card/60 p-3">
       <div className="flex items-start gap-3">
-        <span className="rounded-md bg-primary/10 p-2 text-primary">
+        <span className="rounded-lg bg-primary/10 p-2 text-primary">
           {createElement(iconForKind(recommendation.kind), {
             className: 'h-4 w-4',
             'aria-hidden': true,

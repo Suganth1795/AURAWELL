@@ -127,7 +127,7 @@ export function AssessmentResultView({
             {result.suggestions.map((suggestion) => (
               <div
                 key={`${suggestion.kind}:${suggestion.code}`}
-                className="rounded-md border border-border p-3"
+                className="rounded-xl border border-border bg-card/60 p-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">{suggestion.title}</span>

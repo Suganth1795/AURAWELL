@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingState } from '@/components/ui/spinner';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 export function GamesPage(): React.JSX.Element {
   const [tab, setTab] = useState('games');
@@ -20,13 +21,10 @@ export function GamesPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">MindPlay</h1>
-        <p className="text-sm text-muted-foreground">
-          Short, friendly games for focus, memory, calm and reflection. Play at your own pace — there
-          are no leaderboards and no scores shared with anyone.
-        </p>
-      </div>
+      <PageHeader
+        title="MindPlay"
+        description="Short, friendly games for focus, memory, calm and reflection. Play at your own pace — there are no leaderboards and no scores shared with anyone."
+      />
 
       {error ? <Alert variant="error">{error.message}</Alert> : null}
       {loading ? <LoadingState label="Loading games…" /> : null}

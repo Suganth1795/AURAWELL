@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Footprints, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -93,13 +94,10 @@ export function ActivityPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Activity</h1>
-        <p className="text-sm text-muted-foreground">
-          Move in whatever way feels good. This tracks time spent moving — there are no calories or
-          body measurements here.
-        </p>
-      </div>
+      <PageHeader
+        title="Activity"
+        description="Move in whatever way feels good. This tracks time spent moving — there are no calories or body measurements here."
+      />
 
       <Card>
         <CardHeader>

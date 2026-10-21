@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Moon, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -82,12 +83,10 @@ export function SleepPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Sleep</h1>
-        <p className="text-sm text-muted-foreground">
-          Track your rest to spot patterns over time. This is a wellbeing log, not a medical tool.
-        </p>
-      </div>
+      <PageHeader
+        title="Sleep"
+        description="Track your rest to spot patterns over time. This is a wellbeing log, not a medical tool."
+      />
 
       <Card>
         <CardHeader>

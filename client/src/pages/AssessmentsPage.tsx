@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/spinner';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { cn } from '@/utils/cn';
 
 export function AssessmentsPage(): React.JSX.Element {
@@ -25,12 +26,10 @@ export function AssessmentsPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">AuraAssess</h1>
-        <p className="text-sm text-muted-foreground">
-          Short wellness reflection check-ins with clear, non-diagnostic results and next steps.
-        </p>
-      </div>
+      <PageHeader
+        title="AuraAssess"
+        description="Short wellness reflection check-ins with clear, non-diagnostic results and next steps."
+      />
 
       {error ? <Alert variant="error">{error.message}</Alert> : null}
       {loading ? <LoadingState label="Loading check-ins…" /> : null}

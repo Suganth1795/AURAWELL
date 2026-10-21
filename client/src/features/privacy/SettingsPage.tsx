@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 import { Alert } from '@/components/ui/alert';
 import { Tabs } from '@/components/ui/tabs';
@@ -78,25 +80,17 @@ export function SettingsPage(): React.JSX.Element {
           <span className="text-sm text-muted-foreground" aria-hidden="true">
             Aa
           </span>
-          <input
-            id="font-scale"
-            type="range"
+          <Slider
+            label="Text size"
             min={0.85}
             max={1.5}
             step={0.05}
             value={prefs.fontScale}
-            onChange={(e) => {
-              const fontScale = Number(e.target.value);
+            onValueChange={(fontScale) => {
               document.documentElement.style.setProperty('--app-font-scale', String(fontScale));
             }}
-            onMouseUp={(e) =>
-              void persist({ fontScale: Number((e.target as HTMLInputElement).value) })
-            }
-            onTouchEnd={(e) =>
-              void persist({ fontScale: Number((e.target as HTMLInputElement).value) })
-            }
-            onBlur={(e) => void persist({ fontScale: Number(e.target.value) })}
-            className="h-2 w-full max-w-xs accent-[var(--color-primary)]"
+            onCommittedChange={(fontScale) => void persist({ fontScale })}
+            className="max-w-xs"
           />
           <span className="text-sm tabular-nums">{prefs.fontScale.toFixed(2)}×</span>
         </div>
@@ -180,12 +174,10 @@ export function SettingsPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Signed in as {user.email} · {user.ageGroup.replace('_', ' ')}
-        </p>
-      </div>
+      <PageHeader
+        title="Settings"
+        description={`Signed in as ${user.email} · ${user.ageGroup.replace('_', ' ')}`}
+      />
 
       {saved ? (
         <Alert variant="success" role="status">
@@ -221,7 +213,9 @@ function ProfileSection({
   onSaved: (user: User) => void;
 }): React.JSX.Element {
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ variant: 'success' | 'error'; text: string } | null>(
+    null,
+  );
 
   async function saveName() {
     setBusy(true);
@@ -231,9 +225,12 @@ function ProfileSection({
         displayName: displayName.trim(),
       });
       onSaved(result.user);
-      setMessage('Display name saved.');
+      setMessage({ variant: 'success', text: 'Display name saved.' });
     } catch (e) {
-      setMessage(e instanceof ApiError ? e.message : 'Could not save name');
+      setMessage({
+        variant: 'error',
+        text: e instanceof ApiError ? e.message : 'Could not save name',
+      });
     } finally {
       setBusy(false);
     }
@@ -249,8 +246,8 @@ function ProfileSection({
   return (
     <div className="space-y-4">
       {message ? (
-        <Alert variant="success" role="status">
-          {message}
+        <Alert variant={message.variant} role="status">
+          {message.text}
         </Alert>
       ) : null}
       <div className="space-y-1.5">
@@ -276,7 +273,7 @@ function ProfileSection({
               type="button"
               aria-label={`Choose avatar ${emoji}`}
               aria-pressed={avatar.emoji === emoji}
-              className={`rounded-md border p-2 text-xl ${
+              className={`rounded-lg border p-2 text-xl transition-colors ${
                 avatar.emoji === emoji ? 'border-primary bg-primary/10' : 'border-border'
               }`}
               onClick={() => void saveEmoji(emoji)}

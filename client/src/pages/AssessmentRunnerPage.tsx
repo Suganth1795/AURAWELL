@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { assessmentsService } from '@/features/assessments/assessmentsService';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { AssessmentRunner } from '@/features/assessments/AssessmentRunner';
 import type { AssessmentAnswer } from '@/features/assessments/types';
 import { useAsync } from '@/hooks/useAsync';
@@ -64,7 +65,7 @@ export function AssessmentRunnerPage(): React.JSX.Element {
 
       {assessment ? (
         <div className="space-y-4">
-          <h1 className="text-2xl font-semibold">{assessment.title}</h1>
+          <PageHeader title={assessment.title} />
           <AssessmentRunner
             assessment={assessment}
             submitting={submitting}

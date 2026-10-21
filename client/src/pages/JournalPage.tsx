@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PenLine, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -108,13 +109,10 @@ export function JournalPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Journal</h1>
-        <p className="text-sm text-muted-foreground">
-          A private space to write. Entries are only visible to you and are never analysed without
-          your explicit consent.
-        </p>
-      </div>
+      <PageHeader
+        title="Journal"
+        description="A private space to write. Entries are only visible to you and are never analysed without your explicit consent."
+      />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

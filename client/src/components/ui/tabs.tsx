@@ -23,19 +23,19 @@ export function Tabs({
     >
       <BaseTabs.List
         className={cn(
-          'relative flex gap-1 overflow-x-auto rounded-md bg-muted p-1',
+          'relative flex gap-1 overflow-x-auto rounded-xl bg-muted p-1',
         )}
       >
         {tabs.map((tab) => (
           <BaseTabs.Tab
             key={tab.value}
             value={tab.value}
-            className="z-[1] whitespace-nowrap rounded px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors data-[selected]:text-foreground"
+            className="z-[1] whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors data-[selected]:text-foreground"
           >
             {tab.label}
           </BaseTabs.Tab>
         ))}
-        <BaseTabs.Indicator className="absolute bottom-1 left-0 top-1 rounded bg-card shadow-sm transition-transform duration-200" />
+        <BaseTabs.Indicator className="absolute bottom-1 left-0 top-1 rounded-lg bg-card shadow-[var(--shadow-card)] transition-transform duration-200" />
       </BaseTabs.List>
       {tabs.map((tab) => (
         <BaseTabs.Panel key={tab.value} value={tab.value} className={cn('mt-4', panelClassName)}>

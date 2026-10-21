@@ -3,20 +3,22 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/utils/cn';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2',
+  'inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:opacity-90',
-        secondary: 'bg-secondary text-secondary-foreground hover:opacity-90',
-        outline: 'border border-border bg-card hover:bg-muted',
-        ghost: 'hover:bg-muted',
-        destructive: 'bg-destructive text-destructive-foreground hover:opacity-90',
+        default:
+          'brand-gradient text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-110',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        outline:
+          'border border-border bg-card text-foreground shadow-[var(--shadow-card)] hover:bg-muted hover:border-primary/40',
+        ghost: 'hover:bg-muted hover:text-foreground',
+        destructive: 'bg-destructive text-destructive-foreground hover:brightness-110',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-10 px-4 py-2',
-        sm: 'h-8 px-3 text-xs',
+        sm: 'h-9 px-3 text-xs',
         lg: 'h-12 px-6 text-base',
         icon: 'h-10 w-10',
       },

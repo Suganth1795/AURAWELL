@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LifeBuoy, MessageCircle, Send, ShieldAlert, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -56,14 +57,14 @@ export function CounselingPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{isChild ? 'Guided Time' : 'AURA'}</h1>
-        <p className="text-sm text-muted-foreground">
-          {isChild
+      <PageHeader
+        title={isChild ? 'Guided Time' : 'AURA'}
+        description={
+          isChild
             ? 'A safe space with calming activities and gentle questions. A grown-up can look at this with you.'
-            : 'A supportive wellness companion for reflection. It is not a doctor or therapist and does not provide medical advice.'}
-        </p>
-      </div>
+            : 'A supportive wellness companion for reflection. It is not a doctor or therapist and does not provide medical advice.'
+        }
+      />
 
       {error ? <Alert variant="error">{error.message}</Alert> : null}
       {actionError ? <Alert variant="error">{actionError}</Alert> : null}

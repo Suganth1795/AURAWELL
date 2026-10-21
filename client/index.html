@@ -9,6 +9,25 @@
       content="AuraWell AI - a wellness assessment and personalized counseling support platform."
     />
     <title>AuraWell AI</title>
+    <script>
+      // Applies the persisted theme before first paint to avoid a flash of the
+      // wrong theme. Mirrors client/src/stores/theme.ts.
+      (function () {
+        try {
+          var stored = localStorage.getItem('aurawell-theme');
+          var resolved =
+            stored === 'dark' || stored === 'light'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.setAttribute('data-theme', resolved);
+          document.documentElement.style.colorScheme = resolved;
+        } catch (e) {
+          /* localStorage unavailable — fall back to CSS defaults */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
