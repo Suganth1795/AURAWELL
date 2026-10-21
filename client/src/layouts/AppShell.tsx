@@ -3,6 +3,7 @@ import { LogOut, Menu, Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '@/stores/auth';
 import { labelFor, navItems, utilityNavItems } from '@/components/navigation/navConfig';
+import { NotificationsBell } from '@/features/notifications/NotificationsBell';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/cn';
 
@@ -54,6 +55,7 @@ export function AppShell(): React.JSX.Element {
           <div className="ml-auto flex items-center gap-3">
             {user ? (
               <>
+                <NotificationsBell />
                 <span className="hidden text-sm text-muted-foreground sm:inline" aria-label="Current streak">
                   {user.wellness.avatar.emoji} Level {user.wellness.level} · {user.wellness.xp} XP
                 </span>

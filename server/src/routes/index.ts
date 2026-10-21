@@ -12,6 +12,7 @@ import { counselingRouter } from './counseling.routes.js';
 import { aiRouter } from './ai.routes.js';
 import { analyticsRouter } from './analytics.routes.js';
 import { privacyRouter } from './privacy.routes.js';
+import { notificationsRouter } from './notifications.routes.js';
 
 export const apiRouter = Router();
 
@@ -36,3 +37,4 @@ apiRouter.use('/counseling', counselingRouter);
 apiRouter.use('/ai', aiRouter);
 apiRouter.use('/analytics', analyticsRouter);
 apiRouter.use('/privacy', privacyRouter);
+apiRouter.use('/notifications', notificationsRouter);

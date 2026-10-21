@@ -1,11 +1,21 @@
 import { Schema, model, type HydratedDocument, type InferSchemaType } from 'mongoose';
 
+export const NOTIFICATION_TYPES = [
+  'habit_reminder',
+  'weekly_summary',
+  'achievement',
+  'check_in',
+  'system',
+] as const;
+
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
 const notificationSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     type: {
       type: String,
-      enum: ['habit_reminder', 'weekly_summary', 'achievement', 'check_in', 'system'],
+      enum: NOTIFICATION_TYPES,
       required: true,
     },
     title: { type: String, required: true, maxlength: 120 },
