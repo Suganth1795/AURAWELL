@@ -10,6 +10,8 @@ import { wellnessRouter } from './wellness.routes.js';
 import { recommendationsRouter } from './recommendations.routes.js';
 import { counselingRouter } from './counseling.routes.js';
 import { aiRouter } from './ai.routes.js';
+import { analyticsRouter } from './analytics.routes.js';
+import { privacyRouter } from './privacy.routes.js';
 
 export const apiRouter = Router();
 
@@ -32,6 +34,5 @@ apiRouter.use('/wellness', wellnessRouter);
 apiRouter.use('/recommendations', recommendationsRouter);
 apiRouter.use('/counseling', counselingRouter);
 apiRouter.use('/ai', aiRouter);
-
-// Feature routers are mounted here as they are implemented:
-// /analytics, /privacy
+apiRouter.use('/analytics', analyticsRouter);
+apiRouter.use('/privacy', privacyRouter);
