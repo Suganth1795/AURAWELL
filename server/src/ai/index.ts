@@ -1,5 +1,6 @@
 import { env } from '../config/env.js';
 import { FallbackChatProvider } from './fallbackProvider.js';
+import { createGeminiProviderFromEnv } from './geminiProvider.js';
 import { createOpenAiProviderFromEnv } from './openaiProvider.js';
 import type { ChatProvider } from './types.js';
 
@@ -17,6 +18,12 @@ export function getChatProvider(): ChatProvider {
     return cached;
   }
 
+  const provider = env.AI_PROVIDER.toLowerCase();
+  if (provider === 'google' || provider === 'gemini') {
+    cached = createGeminiProviderFromEnv();
+    return cached;
+  }
+
   // OpenAI and Anthropic-compatible gateways both expose the chat/completions shape
   // through configurable base URLs in this build.
   cached = createOpenAiProviderFromEnv();
@@ -30,4 +37,5 @@ export function setChatProvider(provider: ChatProvider | null): void {
 
 export type { ChatProvider, ChatMessage, CompletionRequest, CompletionResult } from './types.js';
 export { FallbackChatProvider } from './fallbackProvider.js';
+export { GeminiChatProvider } from './geminiProvider.js';
 export { OpenAiChatProvider } from './openaiProvider.js';

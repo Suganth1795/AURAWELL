@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { assessmentsService } from '@/features/assessments/assessmentsService';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { AssessmentRunner } from '@/features/assessments/AssessmentRunner';
-import type { AssessmentAnswer } from '@/features/assessments/types';
+import type { AssessmentAnswer, AssessmentMode } from '@/features/assessments/types';
 import { useAsync } from '@/hooks/useAsync';
 import { ApiError } from '@/services/api';
 import { Alert } from '@/components/ui/alert';
@@ -15,10 +15,11 @@ export function AssessmentRunnerPage(): React.JSX.Element {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [mode, setMode] = useState<AssessmentMode>('standard');
 
   const { data: assessment, error: loadError, loading } = useAsync(
-    () => assessmentsService.get(code),
-    [code],
+    () => assessmentsService.get(code, mode),
+    [code, mode],
   );
 
   function loadErrorMessage(): string | null {
@@ -36,11 +37,13 @@ export function AssessmentRunnerPage(): React.JSX.Element {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await assessmentsService.submit(code, answers);
+      const result = await assessmentsService.submit(code, answers, [], mode);
       navigate(`/assessments/results/${result.id}`, { replace: true });
     } catch (e) {
       if (e instanceof ApiError && e.code === 'assessment_validation') {
         setError('Some answers need attention. Please review your responses.');
+      } else if (e instanceof ApiError && e.code === 'validation_error') {
+        setError('Please check that all questions have been answered.');
       } else {
         setError(e instanceof Error ? e.message : 'Could not submit your answers');
       }
@@ -68,6 +71,8 @@ export function AssessmentRunnerPage(): React.JSX.Element {
           <PageHeader title={assessment.title} />
           <AssessmentRunner
             assessment={assessment}
+            currentMode={mode}
+            onModeChange={setMode}
             submitting={submitting}
             error={error}
             onSubmit={handleSubmit}

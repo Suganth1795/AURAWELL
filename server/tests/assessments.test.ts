@@ -207,4 +207,57 @@ describe('assessments API', () => {
     expect(submit.status).toBe(403);
     expect(submit.body.error.code).toBe('age_restricted');
   });
+
+  it('provides question bank summary statistics across 15 categories', async () => {
+    const client = await registerAdult('stats_user@example.com');
+    const res = await client.get('/api/assessments/stats/summary');
+    expect(res.status).toBe(200);
+    expect(res.body.data.totalQuestions).toBe(540);
+    expect(res.body.data.categoriesCount).toBe(15);
+    expect(res.body.data.categories).toHaveLength(15);
+    expect(res.body.data.modes).toEqual(expect.arrayContaining(['quick', 'standard', 'detailed']));
+  });
+
+  it('supports assessment mode filtering (quick vs detailed)', async () => {
+    const client = await registerAdult('modes_user@example.com');
+    const quickRes = await client.get('/api/assessments/daily-mood?mode=quick');
+    expect(quickRes.status).toBe(200);
+    expect(quickRes.body.data.assessment.totalQuestions).toBe(50);
+    expect(quickRes.body.data.assessment.questions.length).toBeLessThan(50);
+    expect(quickRes.body.data.assessment.questions.length).toBeGreaterThanOrEqual(4);
+
+    const detailedRes = await client.get('/api/assessments/daily-mood?mode=detailed');
+    expect(detailedRes.status).toBe(200);
+    expect(detailedRes.body.data.assessment.questions.length).toBe(50);
+  });
+
+  it('evaluates bank assessment responses with mode and yields soundscape suggestions', async () => {
+    const client = await registerAdult('soundscape_user@example.com');
+    const getRes = await client.get('/api/assessments/daily-mood?mode=quick');
+    expect(getRes.status).toBe(200);
+    const questions = getRes.body.data.assessment.questions;
+
+    const answers = questions.map((q: any) => {
+      if (q.responseType === 'rating') {
+        return { questionId: q.id, value: 1 };
+      }
+      if (q.responseType === 'single_choice' || q.responseType === 'multi_choice') {
+        return { questionId: q.id, optionIds: [q.options[0].id] };
+      }
+      if (q.responseType === 'boolean') {
+        return { questionId: q.id, optionIds: [q.options[0].id] };
+      }
+      return { questionId: q.id, text: 'Reflecting gently' };
+    });
+
+    const submitRes = await client.post('/api/assessments/daily-mood/responses', {
+      answers,
+      mode: 'quick',
+    });
+    expect(submitRes.status).toBe(201);
+    const result = submitRes.body.data.result;
+    expect(result.sevenDayPlan.length).toBeGreaterThan(0);
+    expect(result.suggestions.some((s: { kind: string }) => s.kind === 'soundscape')).toBe(true);
+  });
 });
+

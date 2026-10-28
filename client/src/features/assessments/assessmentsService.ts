@@ -4,7 +4,9 @@ import type {
   AssessmentAnswer,
   AssessmentDetail,
   AssessmentHistoryItem,
+  AssessmentMode,
   AssessmentResult,
+  AssessmentStatsSummary,
   AssessmentSummary,
 } from './types';
 
@@ -14,8 +16,13 @@ export const assessmentsService = {
     return data.assessments;
   },
 
-  async get(code: string): Promise<AssessmentDetail> {
-    const data = await api.get<{ assessment: AssessmentDetail }>(`/assessments/${code}`);
+  async getStatsSummary(): Promise<AssessmentStatsSummary> {
+    return api.get<AssessmentStatsSummary>('/assessments/stats/summary');
+  },
+
+  async get(code: string, mode?: AssessmentMode): Promise<AssessmentDetail> {
+    const query = mode ? `?mode=${mode}` : '';
+    const data = await api.get<{ assessment: AssessmentDetail }>(`/assessments/${code}${query}`);
     return data.assessment;
   },
 
@@ -23,10 +30,12 @@ export const assessmentsService = {
     code: string,
     answers: AssessmentAnswer[],
     priorities: string[] = [],
+    mode?: AssessmentMode,
   ): Promise<AssessmentResult> {
     const data = await api.post<{ result: AssessmentResult }>(`/assessments/${code}/responses`, {
       answers,
       priorities,
+      mode,
     });
     return data.result;
   },

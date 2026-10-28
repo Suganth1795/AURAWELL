@@ -1,4 +1,6 @@
 import type { AgeGroup } from '../utils/ageGroup.js';
+import type { BankCategory } from './questionBank/types.js';
+import { BANK_ASSESSMENT_SEEDS } from './questionBank/seeds.js';
 
 export interface SeedOption {
   id: string;
@@ -42,6 +44,7 @@ export interface SeedInterpretationRule {
     journalPrompts?: string[];
     activities?: string[];
     reflections?: string[];
+    soundscapes?: string[];
   };
   planTemplate?: { days: { day: number; focus: string; actions: string[] }[] };
 }
@@ -61,7 +64,8 @@ export interface AssessmentSeed {
     | 'digital'
     | 'strengths'
     | 'lifestyle'
-    | 'reflection';
+    | 'reflection'
+    | BankCategory;
   ageGroups: AgeGroup[];
   estimatedMinutes: number;
   status: 'published';
@@ -71,7 +75,7 @@ export interface AssessmentSeed {
   interpretationRules: SeedInterpretationRule[];
 }
 
-export const ASSESSMENT_SEEDS: AssessmentSeed[] = [
+const LEGACY_ASSESSMENT_SEEDS: AssessmentSeed[] = [
   {
     code: 'emotional-wellness',
     version: '1.0.0',
@@ -1171,6 +1175,14 @@ export const ASSESSMENT_SEEDS: AssessmentSeed[] = [
   },
 ];
 
+const BANK_SEEDS_BY_CODE = new Map(BANK_ASSESSMENT_SEEDS.map((s) => [s.code, s]));
+
+export const ASSESSMENT_SEEDS: AssessmentSeed[] = [
+  ...LEGACY_ASSESSMENT_SEEDS.map((s) => BANK_SEEDS_BY_CODE.get(s.code) ?? s),
+  ...BANK_ASSESSMENT_SEEDS.filter((s) => !LEGACY_ASSESSMENT_SEEDS.some((l) => l.code === s.code)),
+];
+
 export function getAssessmentSeed(code: string): AssessmentSeed | undefined {
   return ASSESSMENT_SEEDS.find((a) => a.code === code);
 }
+

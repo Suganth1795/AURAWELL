@@ -8,7 +8,8 @@ export type ContentKind =
   | 'activity'
   | 'reflection'
   | 'breathing'
-  | 'goal';
+  | 'goal'
+  | 'soundscape';
 
 export interface WellnessContentItem {
   code: string;
@@ -452,6 +453,97 @@ export const WELLNESS_CONTENT: WellnessContentItem[] = [
     estimatedMinutes: 4,
     details: { questions: ['Three wins from this week…'] },
     tags: ['emotions', 'reflection'],
+  },
+  // ---- Soundscapes (Peaceful Sounds) ----
+  {
+    code: 'calming-rain',
+    kind: 'soundscape',
+    title: 'Calming Rain',
+    description: 'Gentle, steady rainfall to wash away stress and soothe racing thoughts.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 15,
+    details: { trackId: 'liecio-calming-rain-257596', category: 'Rain' },
+    tags: ['calm', 'sleep', 'stress'],
+  },
+  {
+    code: 'soothing-ocean-waves',
+    kind: 'soundscape',
+    title: 'Soothing Ocean Waves',
+    description: 'Rhythmic, deep ocean surf rolling upon the shore to synchronize calm breathing.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 20,
+    details: { trackId: 'dragon-studio-soothing-ocean-waves-372489', category: 'Ocean' },
+    tags: ['calm', 'sleep', 'relaxation'],
+  },
+  {
+    code: 'morning-forest-sanctuary',
+    kind: 'soundscape',
+    title: 'Morning Forest Sanctuary',
+    description: 'Vibrant birdsong echoing through peaceful pine trees for morning vitality.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 10,
+    details: { trackId: 'soundreality-birds-forest-nature-445379', category: 'Forest' },
+    tags: ['focus', 'morning', 'nature'],
+  },
+  {
+    code: 'mountain-waterfall',
+    kind: 'soundscape',
+    title: 'Mountain Waterfall',
+    description: 'Continuous energetic white noise of rushing mountain waters.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 15,
+    details: { trackId: 'tramp963-waterfall-sounds-259625', category: 'Water' },
+    tags: ['focus', 'clarity', 'energy'],
+  },
+  {
+    code: 'tibetan-singing-bell',
+    kind: 'soundscape',
+    title: 'Tibetan Singing Bell',
+    description: 'Resonant bronze singing bowls to ground your nervous system and center awareness.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 10,
+    details: { trackId: 'freesound_community-singing-bell-hit-2-75258', category: 'Meditation' },
+    tags: ['meditation', 'calm', 'grounding'],
+  },
+  {
+    code: 'harmonic-resonance',
+    kind: 'soundscape',
+    title: 'Harmonic Resonance (136 Hz)',
+    description: 'Subtle 136 Hz OM frequency soundscape for deep meditation and inner balance.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 15,
+    details: { trackId: 'freesound_community-natural-armonics-at-136-25159', category: 'Meditation' },
+    tags: ['meditation', 'balance', 'inner_peace'],
+  },
+  {
+    code: 'ambient-reflection',
+    kind: 'soundscape',
+    title: 'Ambient Reflection',
+    description: 'Lush, quiet cinematic tones designed for deep work, coding, and flow.',
+    ageGroups: ['teen', 'adult', 'older_adult'],
+    estimatedMinutes: 20,
+    details: { trackId: 'ncprime-cinematic-background-293547', category: 'Ambient Music' },
+    tags: ['focus', 'flow', 'work'],
+  },
+  {
+    code: 'winter-whispering-wind',
+    kind: 'soundscape',
+    title: 'Winter Whispering Wind',
+    description: 'Gentle, whispering breezes outside a warm room for deep sleep and contemplation.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 25,
+    details: { trackId: 'dragon-studio-winter-wind-402331', category: 'Wind' },
+    tags: ['sleep', 'stillness', 'calm'],
+  },
+  {
+    code: 'positive-radiance',
+    kind: 'soundscape',
+    title: 'Positive Radiance',
+    description: 'Bright, uplifting acoustic harmonies to spark motivation and gratitude.',
+    ageGroups: ['child', 'teen', 'adult', 'older_adult'],
+    estimatedMinutes: 10,
+    details: { trackId: 'grand_project-uplifting-motivational-background-music-positive-vibe_18sec-496508', category: 'Ambient Music' },
+    tags: ['motivation', 'joy', 'positivity'],
   },
 ];
 

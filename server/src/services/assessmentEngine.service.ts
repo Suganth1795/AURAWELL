@@ -27,11 +27,12 @@ export interface InterpretationRuleDef {
   summary: string;
   priorities: string[];
   recommend: {
-    games: string[];
-    habits: string[];
-    journalPrompts: string[];
-    activities: string[];
-    reflections: string[];
+    games?: string[];
+    habits?: string[];
+    journalPrompts?: string[];
+    activities?: string[];
+    reflections?: string[];
+    soundscapes?: string[];
   };
   planTemplate?: { days: { day: number; focus: string; actions: string[] }[] } | null;
 }
@@ -52,7 +53,7 @@ export interface AnswerInput {
 }
 
 export interface Suggestion {
-  kind: 'game' | 'habit' | 'journal_prompt' | 'sleep_routine' | 'activity' | 'reflection' | 'breathing';
+  kind: 'game' | 'habit' | 'journal_prompt' | 'sleep_routine' | 'activity' | 'reflection' | 'breathing' | 'soundscape';
   code: string;
   title: string;
   explanation: string;
@@ -229,8 +230,46 @@ export function validateAnswers(
 
 const STRAIN_SET = new Set(STRAIN_TAG_PREFIXES);
 
+export function isStrainTag(tag: string): boolean {
+  if (STRAIN_SET.has(tag)) return true;
+  const [domain, specific] = tag.split(':');
+  if (['stress', 'anxiety', 'burnout', 'anger'].includes(domain)) {
+    if (!specific || !['low', 'none', 'clear', 'resilient', 'peaceful', 'calm'].includes(specific)) {
+      return true;
+    }
+  }
+  if (['confidence', 'resilience', 'self_worth', 'motivation', 'energy'].includes(domain)) {
+    if (['low', 'depleted', 'fragile', 'imposter_syndrome', 'critical', 'drained'].includes(specific)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function domainOf(tag: string): string {
   return tag.split(':')[0];
+}
+
+/**
+ * Filter questions based on requested mode tier ('quick' | 'standard' | 'detailed').
+ */
+export function filterQuestionsForMode(
+  questions: QuestionDef[],
+  mode?: string,
+): QuestionDef[] {
+  if (!mode || mode === 'detailed') return questions;
+  const filtered = questions.filter((q) => {
+    const modes = (q as any).modes;
+    if (Array.isArray(modes)) {
+      return modes.includes(mode);
+    }
+    return true;
+  });
+  const minRequired = mode === 'quick' ? 4 : 8;
+  if (filtered.length < minRequired) {
+    return questions.slice(0, mode === 'quick' ? 5 : 12);
+  }
+  return filtered;
 }
 
 /**
@@ -297,7 +336,7 @@ export function interpretAssessment(
   const probedDomains = new Set<string>();
   const collectProbed = (tags: string[] | undefined) => {
     for (const tag of tags ?? []) {
-      if (STRAIN_SET.has(tag)) probedDomains.add(domainOf(tag));
+      if (isStrainTag(tag)) probedDomains.add(domainOf(tag));
     }
   };
   for (const question of visible) {
@@ -308,7 +347,7 @@ export function interpretAssessment(
   const domainPenalties: Record<string, number> = {};
   for (const domain of probedDomains) domainPenalties[domain] = 0;
   for (const [tag, weight] of Object.entries(tagWeights)) {
-    if (STRAIN_SET.has(tag)) {
+    if (isStrainTag(tag)) {
       const domain = domainOf(tag);
       if (domain in domainPenalties) domainPenalties[domain] += weight;
     }
@@ -347,21 +386,36 @@ export function interpretAssessment(
     for (const code of rule.recommend.reflections ?? []) {
       pushSuggestion('reflection', code, `Suggested by “${rule.label}” in ${assessment.title}.`);
     }
+    for (const code of rule.recommend.soundscapes ?? []) {
+      pushSuggestion('soundscape', code, `Soundscape suggested by “${rule.label}” in ${assessment.title}.`);
+    }
   }
 
-  let sevenDayPlan: PlanDay[] = [];
+  let sevenDayPlan: PlanDay[];
   const planRule = matched.find((r) => r.planTemplate?.days?.length);
   if (planRule?.planTemplate) {
     sevenDayPlan = planRule.planTemplate.days.map((d) => ({ ...d }));
+  } else {
+    const focusTheme = priorities[0] ?? `${assessment.title} Routine`;
+    const topSuggestions = suggestions.slice(0, 3).map((s) => s.title);
+    sevenDayPlan = [
+      { day: 1, focus: `${focusTheme}: Awareness`, actions: [`Reflect on today's assessment results for 5 minutes`, topSuggestions[0] ? `Explore ${topSuggestions[0]}` : 'Take 5 slow, grounding breaths'] },
+      { day: 2, focus: `${focusTheme}: Small Step`, actions: ['Schedule a 10-minute quiet pause between tasks', 'Observe when your energy naturally peaks today'] },
+      { day: 3, focus: `${focusTheme}: Restoration`, actions: [topSuggestions[1] ? `Practice ${topSuggestions[1]}` : 'Step outside for natural daylight exposure', 'Release tension from your jaw and shoulders'] },
+      { day: 4, focus: `${focusTheme}: Boundaries`, actions: ['Protect one 45-minute block of quiet focus or rest', 'Hydrate mindfully before opening email or social apps'] },
+      { day: 5, focus: `${focusTheme}: Practice`, actions: [topSuggestions[2] ? `Engage in ${topSuggestions[2]}` : 'Write down one thought you are ready to let go of', 'Listen to your recommended soundscape'] },
+      { day: 6, focus: `${focusTheme}: Reflection`, actions: ['Acknowledge two moments that brought ease or gratitude today', 'Enjoy a calm evening wind-down'] },
+      { day: 7, focus: `${focusTheme}: Intention`, actions: ['Review what felt most grounding across the week', 'Set one compassionate intention for next week'] },
+    ];
   }
 
   const summaries = matched.slice(0, 2).map((r) => r.summary);
-  const positiveTags = tags.filter((t) => !STRAIN_SET.has(t)).slice(0, 4);
+  const positiveTags = tags.filter((t) => !isStrainTag(t)).slice(0, 4);
   const summaryParts = [
     `${displayName}, thank you for completing “${assessment.title}”.`,
     ...summaries,
     positiveTags.length
-      ? `You also reported strengths such as ${positiveTags.map((t) => t.split(':')[1].replace(/_/g, ' ')).join(', ')}.`
+      ? `You also reported strengths such as ${positiveTags.map((t) => (t.split(':')[1] ?? t).replace(/_/g, ' ')).join(', ')}.`
       : '',
   ].filter(Boolean);
 

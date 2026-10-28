@@ -8,6 +8,12 @@
       name="description"
       content="AuraWell AI - a wellness assessment and personalized counseling support platform."
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
     <title>AuraWell AI</title>
     <script>
       // Applies the persisted theme before first paint to avoid a flash of the
@@ -18,9 +24,7 @@
           var resolved =
             stored === 'dark' || stored === 'light'
               ? stored
-              : window.matchMedia('(prefers-color-scheme: dark)').matches
-                ? 'dark'
-                : 'light';
+              : 'dark';
           document.documentElement.setAttribute('data-theme', resolved);
           document.documentElement.style.colorScheme = resolved;
         } catch (e) {

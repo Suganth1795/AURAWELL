@@ -1,6 +1,6 @@
 import { createElement, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Check, Flame, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { ArrowRight, Check, Flame, ThumbsDown, ThumbsUp, Music, Play } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -21,6 +21,8 @@ import { analyticsService } from '@/features/analytics/analyticsService';
 import { WellnessGalaxy } from '@/features/analytics/WellnessGalaxy';
 import { MiniBarChart } from '@/features/wellness/MiniBarChart';
 import { moodService } from '@/features/wellness/wellnessService';
+import { musicCatalog } from '@/features/music/musicCatalog';
+import { useMusicStore } from '@/features/music/musicStore';
 import {
   iconForKind,
   recommendationService,
@@ -149,6 +151,45 @@ export function DashboardPage(): React.JSX.Element {
                 <WellnessGalaxy domains={domains} />
               </CardContent>
             </Card>
+          </div>
+
+          {/* Peaceful Soundscapes Quick Launcher */}
+          <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-primary">
+                  <Music className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Peaceful Soundscapes</h3>
+                  <p className="text-xs text-muted-foreground">Relax with authentic nature sounds and ambient music.</p>
+                </div>
+              </div>
+              <Link to="/music" className="text-xs font-medium text-primary hover:underline">
+                Explore all 19 sounds &rarr;
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {musicCatalog.slice(0, 3).map((track) => (
+                <button
+                  key={track.id}
+                  type="button"
+                  onClick={() => useMusicStore.getState().playTrack(track, musicCatalog)}
+                  className="group flex items-center justify-between rounded-xl border border-border/60 bg-muted/40 p-3 text-left transition-all hover:bg-muted/80 hover:border-border cursor-pointer"
+                >
+                  <div className="min-w-0 pr-2">
+                    <div className="text-xs font-semibold text-foreground truncate group-hover:text-primary">
+                      {track.title}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground truncate">{track.mood}</div>
+                  </div>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <Play className="h-3.5 w-3.5 fill-current ml-0.5" />
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">

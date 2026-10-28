@@ -81,6 +81,7 @@ npm run dev
 
 ## Documentation
 
+- [Project overview and PPT content](docs/project-overview.md) — consolidated feature, technology, purpose, architecture, and presentation guide
 - [Architecture](docs/architecture.md) — how the client, API, services, and AI layer fit together
 - [Security](docs/security.md) — authentication, sessions, CSRF, rate limiting, and data handling
 - [API reference](docs/api.md) — endpoints, envelopes, and error codes

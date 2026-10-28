@@ -19,8 +19,8 @@ export function createSessionMiddleware(mongoUrl = env.MONGODB_URI): RequestHand
     }),
     cookie: {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: isProd,
+      sameSite: env.SESSION_COOKIE_SAME_SITE,
+      secure: isProd || env.SESSION_COOKIE_SAME_SITE === 'none',
       maxAge: ONE_WEEK_MS,
       path: '/',
     },

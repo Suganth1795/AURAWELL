@@ -9,6 +9,9 @@ const buttonVariants = cva(
       variant: {
         default:
           'brand-gradient text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-110',
+        glow: 'glow-btn-primary rounded-full font-semibold',
+        glass: 'glow-btn-glass rounded-full font-medium',
+        pill: 'rounded-full bg-muted/60 text-foreground border border-border hover:border-primary/40 hover:bg-muted backdrop-blur-xl',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         outline:
           'border border-border bg-card text-foreground shadow-[var(--shadow-card)] hover:bg-muted hover:border-primary/40',
@@ -20,6 +23,7 @@ const buttonVariants = cva(
         default: 'h-10 px-4 py-2',
         sm: 'h-9 px-3 text-xs',
         lg: 'h-12 px-6 text-base',
+        pill: 'h-10 px-5 text-sm',
         icon: 'h-10 w-10',
       },
     },

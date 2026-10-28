@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import type { RequestHandler } from 'express';
+import { env, isProd } from '../config/env.js';
 
 export const CSRF_COOKIE = 'aurawell_csrf';
 export const CSRF_HEADER = 'x-csrf-token';
@@ -20,8 +21,8 @@ export const csrfMiddleware: RequestHandler = (req, res, next) => {
   if (token !== existing) {
     res.cookie(CSRF_COOKIE, token, {
       httpOnly: false,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: env.SESSION_COOKIE_SAME_SITE,
+      secure: isProd || env.SESSION_COOKIE_SAME_SITE === 'none',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });

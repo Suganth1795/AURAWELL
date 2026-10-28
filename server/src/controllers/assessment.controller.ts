@@ -8,6 +8,7 @@ import { paginate, paginationQuerySchema, skipFor } from '../utils/pagination.js
 import {
   interpretAssessment,
   AssessmentValidationError,
+  filterQuestionsForMode,
   type AssessmentDef,
 } from '../services/assessmentEngine.service.js';
 import {
@@ -16,6 +17,12 @@ import {
   persistAssessmentRecommendations,
 } from '../services/actionPlan.service.js';
 import { getContentItem } from '../data/wellnessContent.js';
+import {
+  ALL_BANK_QUESTIONS,
+  CATEGORY_METADATA,
+  getBankQuestionsByCategory,
+} from '../data/questionBank/index.js';
+import { ASSESSMENT_SEEDS, getAssessmentSeed } from '../data/assessments.js';
 
 type SubmitBody = {
   answers: {
@@ -25,6 +32,7 @@ type SubmitBody = {
     text?: string;
   }[];
   priorities: string[];
+  mode?: string;
 };
 
 function questionDef(q: any) {
@@ -53,6 +61,9 @@ function questionDef(q: any) {
       tags: r.tags ?? [],
       weight: r.weight ?? 1,
     })),
+    modes: q.modes ?? ['quick', 'standard', 'detailed'],
+    category: q.category,
+    soundscapeRecommendation: q.soundscapeRecommendation,
   };
 }
 
@@ -77,6 +88,7 @@ function toAssessmentDef(assessment: any): AssessmentDef {
         journalPrompts: r.recommend?.journalPrompts ?? [],
         activities: r.recommend?.activities ?? [],
         reflections: r.recommend?.reflections ?? [],
+        soundscapes: r.recommend?.soundscapes ?? [],
       },
       planTemplate: r.planTemplate ?? null,
     })),
@@ -101,7 +113,13 @@ function adaptQuestionsForAge(questions: any[], ageGroup: string) {
 export const listAssessmentsHandler: RequestHandler = async (req, res, next) => {
   try {
     const user = requireUser(req);
-    const all = await Assessment.find({ status: 'published' }).sort({ category: 1, title: 1 });
+    let all = await Assessment.find({ status: 'published' }).sort({ category: 1, title: 1 });
+    if (all.length < ASSESSMENT_SEEDS.length) {
+      for (const seed of ASSESSMENT_SEEDS) {
+        await Assessment.updateOne({ code: seed.code }, { $set: { ...seed } }, { upsert: true });
+      }
+      all = await Assessment.find({ status: 'published' }).sort({ category: 1, title: 1 });
+    }
     const items = all
       .filter((a) => a.ageGroups.includes(user.ageGroup))
       .map((a) => ({
@@ -123,12 +141,25 @@ export const listAssessmentsHandler: RequestHandler = async (req, res, next) => 
 export const getAssessmentHandler: RequestHandler = async (req, res, next) => {
   try {
     const user = requireUser(req);
-    const assessment = await Assessment.findOne({ code: req.params.code, status: 'published' });
+    const code = String(req.params.code);
+    let assessment = await Assessment.findOne({ code, status: 'published' });
+    if (!assessment) {
+      const seed = getAssessmentSeed(code);
+      if (seed) {
+        await Assessment.updateOne({ code: seed.code }, { $set: { ...seed } }, { upsert: true });
+        assessment = await Assessment.findOne({ code, status: 'published' });
+      }
+    }
     if (!assessment) throw new HttpError(404, 'Assessment not found', 'not_found');
     if (!assessment.ageGroups.includes(user.ageGroup)) {
       throw new HttpError(403, 'This assessment is not available for your age group', 'age_restricted');
     }
     const adapted = adaptQuestionsForAge(assessment.questions, user.ageGroup);
+    const mode = typeof req.query.mode === 'string' ? req.query.mode : undefined;
+    const questionsForMode = mode
+      ? filterQuestionsForMode(adapted, mode)
+      : adapted;
+
     ok(res, {
       assessment: {
         code: assessment.code,
@@ -139,7 +170,9 @@ export const getAssessmentHandler: RequestHandler = async (req, res, next) => {
         outro: assessment.outro,
         disclaimer: assessment.disclaimer,
         estimatedMinutes: assessment.estimatedMinutes,
-        questions: adapted.map((q) => ({
+        mode: mode ?? 'standard',
+        totalQuestions: adapted.length,
+        questions: questionsForMode.map((q) => ({
           id: q.id,
           text: q.text,
           helpText: q.helpText,
@@ -156,9 +189,29 @@ export const getAssessmentHandler: RequestHandler = async (req, res, next) => {
             emoji: o.emoji,
           })),
           conditional: q.conditional,
+          modes: q.modes,
+          category: q.category,
+          soundscapeRecommendation: q.soundscapeRecommendation,
         })),
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAssessmentStatsSummaryHandler: RequestHandler = async (_req, res, next) => {
+  try {
+    const summary = {
+      totalQuestions: ALL_BANK_QUESTIONS.length,
+      categoriesCount: Object.keys(CATEGORY_METADATA).length,
+      categories: Object.values(CATEGORY_METADATA).map((meta) => ({
+        ...meta,
+        actualCount: getBankQuestionsByCategory(meta.id).length,
+      })),
+      modes: ['quick', 'standard', 'detailed', 'daily', 'weekly'],
+    };
+    ok(res, summary);
   } catch (error) {
     next(error);
   }
@@ -168,14 +221,25 @@ export const submitAssessmentHandler: RequestHandler = async (req, res, next) =>
   try {
     const user = requireUser(req);
     const body = req.body as SubmitBody;
+    const code = String(req.params.code);
 
-    const assessment = await Assessment.findOne({ code: req.params.code, status: 'published' });
+    let assessment = await Assessment.findOne({ code, status: 'published' });
+    if (!assessment) {
+      const seed = getAssessmentSeed(code);
+      if (seed) {
+        await Assessment.updateOne({ code: seed.code }, { $set: { ...seed } }, { upsert: true });
+        assessment = await Assessment.findOne({ code, status: 'published' });
+      }
+    }
     if (!assessment) throw new HttpError(404, 'Assessment not found', 'not_found');
     if (!assessment.ageGroups.includes(user.ageGroup)) {
       throw new HttpError(403, 'This assessment is not available for your age group', 'age_restricted');
     }
 
     const def = toAssessmentDef(assessment);
+    if (body.mode) {
+      def.questions = filterQuestionsForMode(def.questions, body.mode);
+    }
 
     let interpretation;
     try {

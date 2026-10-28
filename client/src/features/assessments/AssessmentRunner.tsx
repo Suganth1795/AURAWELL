@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Music, Zap, Sparkles, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
@@ -9,10 +9,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Alert } from '@/components/ui/alert';
 import { cn } from '@/utils/cn';
-import type { AssessmentAnswer, AssessmentDetail, AssessmentQuestion } from './types';
+import type {
+  AssessmentAnswer,
+  AssessmentDetail,
+  AssessmentMode,
+  AssessmentQuestion,
+} from './types';
 
 interface RunnerProps {
   assessment: AssessmentDetail;
+  currentMode?: AssessmentMode;
+  onModeChange?: (mode: AssessmentMode) => void;
   submitting: boolean;
   error: string | null;
   onSubmit: (answers: AssessmentAnswer[]) => void;
@@ -58,6 +65,8 @@ function isAnswered(question: AssessmentQuestion, answer?: AssessmentAnswer): bo
 
 export function AssessmentRunner({
   assessment,
+  currentMode = 'standard',
+  onModeChange,
   submitting,
   error,
   onSubmit,
@@ -136,7 +145,16 @@ export function AssessmentRunner({
       .filter((q) => isVisible(q, answers))
       .map((q): AssessmentAnswer | null => {
         const answer = answers[q.id];
-        if (answer) return answer;
+        if (answer) {
+          if (q.responseType === 'rating') {
+            const val =
+              typeof answer.value === 'number' && Number.isFinite(answer.value)
+                ? answer.value
+                : defaultRating(q);
+            return { questionId: q.id, value: val };
+          }
+          return answer;
+        }
         // Untouched rating questions display a default value; submit it so the
         // result always reflects what the user saw.
         if (q.responseType === 'rating') {
@@ -150,18 +168,99 @@ export function AssessmentRunner({
 
   if (!started) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4">
+      <div className="mx-auto max-w-2xl space-y-6">
         <Alert variant="info" role="status">
           {assessment.intro}
         </Alert>
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>{assessment.questions.length} questions</span>
-          <span aria-hidden="true">·</span>
-          <span>~{assessment.estimatedMinutes} minutes</span>
+
+        {/* Assessment Mode Depth Selector */}
+        <div className="space-y-3">
+          <label className="text-sm font-semibold text-foreground">
+            Select Check-in Depth
+          </label>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <button
+              type="button"
+              onClick={() => onModeChange?.('quick')}
+              className={cn(
+                'flex flex-col text-left p-3.5 rounded-xl border transition-all',
+                currentMode === 'quick'
+                  ? 'border-primary bg-primary/10 shadow-sm'
+                  : 'border-border bg-card/60 hover:border-primary/40',
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                  <Zap className="h-4 w-4 text-amber-400" /> Quick
+                </span>
+                <span className="text-[11px] text-muted-foreground font-medium">~2-3 min</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Core pulse check. Great for busy mornings or rapid resets.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onModeChange?.('standard')}
+              className={cn(
+                'flex flex-col text-left p-3.5 rounded-xl border transition-all',
+                currentMode === 'standard'
+                  ? 'border-primary bg-primary/10 shadow-sm'
+                  : 'border-border bg-card/60 hover:border-primary/40',
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                  <Sparkles className="h-4 w-4 text-primary" /> Standard
+                </span>
+                <span className="text-[11px] text-muted-foreground font-medium">~5-7 min</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Multi-dimensional check-in covering primary drivers and feelings.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onModeChange?.('detailed')}
+              className={cn(
+                'flex flex-col text-left p-3.5 rounded-xl border transition-all',
+                currentMode === 'detailed'
+                  ? 'border-primary bg-primary/10 shadow-sm'
+                  : 'border-border bg-card/60 hover:border-primary/40',
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                  <BookOpen className="h-4 w-4 text-purple-400" /> Detailed
+                </span>
+                <span className="text-[11px] text-muted-foreground font-medium">~12-15 min</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Deep-dive across all bank questions in this dimension.
+              </p>
+            </button>
+          </div>
         </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground rounded-lg bg-muted/40 p-3">
+          <div className="flex items-center gap-3">
+            <span>{assessment.questions.length} questions in this mode</span>
+            <span aria-hidden="true">·</span>
+            <span>~{assessment.estimatedMinutes} minutes</span>
+          </div>
+          {assessment.totalQuestions && assessment.totalQuestions > assessment.questions.length ? (
+            <span className="text-xs text-muted-foreground/80">
+              (Filtered from full bank of {assessment.totalQuestions} questions)
+            </span>
+          ) : null}
+        </div>
+
         <p className="text-sm text-muted-foreground">{assessment.disclaimer}</p>
-        <Button onClick={() => setStarted(true)} size="lg">
-          Begin
+
+        <Button onClick={() => setStarted(true)} size="lg" className="gap-2">
+          Begin {currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} Check-in
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
@@ -169,14 +268,20 @@ export function AssessmentRunner({
   }
 
   if (!current) {
-    return <Alert variant="warning">This assessment has no questions available.</Alert>;
+    return <Alert variant="warning">This assessment has no questions available for this mode.</Alert>;
   }
 
   const answeredNumbers = questions.slice(0, index + 1).filter((q) => isVisible(q, answers)).length;
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <Progress value={progress} label={`Question ${answeredNumbers} of about ${visibleCount}`} />
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Question {answeredNumbers} of {visibleCount}</span>
+          <span className="font-medium capitalize text-primary">{currentMode} Mode</span>
+        </div>
+        <Progress value={progress} label={`Question ${answeredNumbers} of ${visibleCount}`} />
+      </div>
 
       {error ? <Alert variant="error">{error}</Alert> : null}
 
@@ -187,12 +292,20 @@ export function AssessmentRunner({
         transition={{ duration: 0.2 }}
       >
         <fieldset className="space-y-4">
-          <legend className="text-lg font-medium">
-            {current.text}
-            {current.required === false ? (
-              <span className="ml-2 text-xs font-normal text-muted-foreground">Optional</span>
+          <div className="space-y-1.5">
+            <legend className="text-lg font-medium leading-snug">
+              {current.text}
+              {current.required === false ? (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">Optional</span>
+              ) : null}
+            </legend>
+            {current.soundscapeRecommendation ? (
+              <div className="inline-flex items-center gap-1.5 text-xs text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2.5 py-0.5 rounded-full">
+                <Music className="h-3 w-3" /> Paired with calming soundscape
+              </div>
             ) : null}
-          </legend>
+          </div>
+
           {current.helpText ? (
             <p className="text-sm text-muted-foreground">{current.helpText}</p>
           ) : null}
@@ -250,34 +363,56 @@ export function AssessmentRunner({
             </div>
           ) : null}
 
-          {current.responseType === 'rating' ? (
-            <div className="space-y-3">
-              <Slider
-                label={
-                  current.ratingLabels?.[
-                    Math.min(
-                      Math.max(
-                        (currentAnswer?.value ?? current.ratingMin ?? 1) - (current.ratingMin ?? 1),
-                        0,
-                      ),
-                      (current.ratingLabels?.length ?? 1) - 1,
-                    )
-                  ] ?? 'Your rating'
-                }
-                min={current.ratingMin ?? 1}
-                max={current.ratingMax ?? 5}
-                step={1}
-                value={effectiveRating(current, currentAnswer)}
-                onValueChange={(value) => setAnswer(current.id, { value, optionIds: undefined })}
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{current.ratingLabels?.[0] ?? current.ratingMin}</span>
-                <span>
-                  {current.ratingLabels?.[current.ratingLabels.length - 1] ?? current.ratingMax}
-                </span>
+          {current.responseType === 'rating' ? (() => {
+            const min = current.ratingMin ?? 1;
+            const max = current.ratingMax ?? 5;
+            const currentVal = effectiveRating(current, currentAnswer);
+            const labelIdx = Math.min(
+              Math.max(currentVal - min, 0),
+              (current.ratingLabels?.length ?? 1) - 1,
+            );
+            const activeLabel = current.ratingLabels?.[labelIdx] ?? `Rating ${currentVal}`;
+            const steps = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+
+            return (
+              <div className="space-y-4">
+                <Slider
+                  label={activeLabel}
+                  min={min}
+                  max={max}
+                  step={1}
+                  value={currentVal}
+                  onValueChange={(value) => setAnswer(current.id, { value, optionIds: undefined })}
+                />
+                <div className="flex items-center justify-between gap-1.5 pt-1">
+                  {steps.map((stepVal) => {
+                    const active = currentVal === stepVal;
+                    return (
+                      <button
+                        key={stepVal}
+                        type="button"
+                        onClick={() => setAnswer(current.id, { value: stepVal, optionIds: undefined })}
+                        className={cn(
+                          'flex-1 py-2 px-1.5 rounded-xl text-xs font-semibold border transition-all text-center',
+                          active
+                            ? 'border-primary bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]'
+                            : 'border-border/60 bg-card/60 text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-muted/40',
+                        )}
+                      >
+                        {stepVal}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground px-0.5">
+                  <span>{current.ratingLabels?.[0] ?? min}</span>
+                  <span>
+                    {current.ratingLabels?.[current.ratingLabels.length - 1] ?? max}
+                  </span>
+                </div>
               </div>
-            </div>
-          ) : null}
+            );
+          })() : null}
 
           {current.responseType === 'short_text' ? (
             <div className="space-y-1.5">

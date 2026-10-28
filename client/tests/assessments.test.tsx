@@ -155,11 +155,54 @@ describe('AssessmentRunner', () => {
       </MemoryRouter>,
     );
     await user.click(screen.getByRole('button', { name: /begin/i }));
+    // Verify initial default rating label for value 3 is "Okay"
+    expect(screen.getByText('Okay')).toBeInTheDocument();
     // No dragging: the slider already shows a value, so results must be reachable.
     await user.click(screen.getByRole('button', { name: /see my results/i }));
     expect(onSubmit).toHaveBeenCalledTimes(1);
     const answers = onSubmit.mock.calls[0][0];
     expect(answers).toEqual([{ questionId: 'r1', value: 3 }]);
+  });
+
+  it('updates the rating when clicking a step button and submits the chosen value', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    const ratingAssessment: AssessmentDetail = {
+      ...assessment,
+      estimatedMinutes: 1,
+      questions: [
+        {
+          id: 'r1',
+          text: 'Rate how rested you feel',
+          responseType: 'rating',
+          required: true,
+          ratingMin: 1,
+          ratingMax: 5,
+          ratingLabels: ['Very tired', 'Tired', 'Okay', 'Rested', 'Very rested'],
+          options: [],
+        },
+      ],
+    };
+    render(
+      <MemoryRouter>
+        <AssessmentRunner
+          assessment={ratingAssessment}
+          submitting={false}
+          error={null}
+          onSubmit={onSubmit}
+        />
+      </MemoryRouter>,
+    );
+    await user.click(screen.getByRole('button', { name: /begin/i }));
+    expect(screen.getByText('Okay')).toBeInTheDocument();
+    // Click step button "5"
+    await user.click(screen.getByRole('button', { name: '5' }));
+    // Label updates to "Very rested" (appears as the active label and in the legend)
+    expect(screen.getAllByText('Very rested')).toHaveLength(2);
+    await user.click(screen.getByRole('button', { name: /see my results/i }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    const answers = onSubmit.mock.calls[0][0];
+    expect(answers).toEqual([{ questionId: 'r1', value: 5 }]);
   });
 });
 

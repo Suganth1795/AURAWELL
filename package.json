@@ -20,7 +20,8 @@
     "test": "npm run test -w server && npm run test -w client",
     "test:server": "npm run test -w server",
     "test:client": "npm run test -w client",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "seed": "npm run seed -w server"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",

@@ -5,11 +5,11 @@ export type ResolvedTheme = 'light' | 'dark';
 
 const STORAGE_KEY = 'aurawell-theme';
 
-/** Reads the persisted mode, defaulting to "system" on first visit. */
+/** Reads the persisted mode, defaulting to "dark" on first visit for the cosmic experience. */
 function readStoredMode(): ThemeMode {
-  if (typeof window === 'undefined') return 'system';
+  if (typeof window === 'undefined') return 'dark';
   const value = window.localStorage.getItem(STORAGE_KEY);
-  return value === 'light' || value === 'dark' || value === 'system' ? value : 'system';
+  return value === 'light' || value === 'dark' || value === 'system' ? value : 'dark';
 }
 
 function prefersDark(): boolean {

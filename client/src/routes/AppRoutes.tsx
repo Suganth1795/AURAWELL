@@ -12,6 +12,7 @@ import { OnboardingPage } from '@/features/onboarding/OnboardingPage';
 import { AppShell } from '@/layouts/AppShell';
 import { RequireAuth } from '@/routes/RequireAuth';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { MusicPage } from '@/pages/MusicPage';
 import { AssessmentsPage } from '@/pages/AssessmentsPage';
 import { AssessmentRunnerPage } from '@/pages/AssessmentRunnerPage';
 import { AssessmentResultPage } from '@/pages/AssessmentResultPage';
@@ -86,6 +87,7 @@ export function AppRoutes(): React.JSX.Element {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/music" element={<MusicPage />} />
         <Route path="/assessments" element={<AssessmentsPage />} />
         <Route path="/assessments/results/:id" element={<AssessmentResultPage />} />
         <Route path="/assessments/:code" element={<AssessmentRunnerPage />} />

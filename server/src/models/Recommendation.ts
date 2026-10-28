@@ -9,6 +9,7 @@ export const RECOMMENDATION_KINDS = [
   'reflection',
   'breathing',
   'goal',
+  'soundscape',
 ] as const;
 
 const recommendationSchema = new Schema(

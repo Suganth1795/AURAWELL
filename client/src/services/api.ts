@@ -1,6 +1,7 @@
 import type { ApiErrorBody } from '@/types';
 
-const BASE: string = import.meta.env.VITE_API_BASE_URL ?? '/api';
+const rawBase = (import.meta.env.VITE_API_BASE_URL || '/api').trim();
+const BASE: string = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
 
 export class ApiError extends Error {
   readonly status: number;

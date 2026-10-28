@@ -27,7 +27,7 @@ const assessmentResponseSchema = new Schema(
         {
           kind: {
             type: String,
-            enum: ['game', 'habit', 'journal_prompt', 'sleep_routine', 'activity', 'reflection', 'breathing'],
+            enum: ['game', 'habit', 'journal_prompt', 'sleep_routine', 'activity', 'reflection', 'breathing', 'soundscape'],
           },
           code: String,
           title: String,

@@ -8,7 +8,24 @@ export type AssessmentCategory =
   | 'digital'
   | 'strengths'
   | 'lifestyle'
-  | 'reflection';
+  | 'reflection'
+  | 'daily-mood'
+  | 'stress-pressure'
+  | 'anxiety-worry'
+  | 'sleep-rest'
+  | 'emotional-wellbeing'
+  | 'self-esteem'
+  | 'burnout-exhaustion'
+  | 'focus-concentration'
+  | 'social-connection'
+  | 'motivation-productivity'
+  | 'anger-frustration'
+  | 'resilience-coping'
+  | 'gratitude-positive'
+  | 'lifestyle-digital'
+  | 'weekly-review';
+
+export type AssessmentMode = 'quick' | 'standard' | 'detailed' | 'daily' | 'weekly';
 
 export type ResponseType = 'single_choice' | 'multi_choice' | 'rating' | 'boolean' | 'short_text';
 
@@ -42,6 +59,9 @@ export interface AssessmentQuestion {
   maxLength?: number | null;
   options: AssessmentOption[];
   conditional?: { dependsOnQuestionId: string; showWhenOptionIds: string[] } | null;
+  modes?: AssessmentMode[];
+  category?: AssessmentCategory;
+  soundscapeRecommendation?: string;
 }
 
 export interface AssessmentDetail {
@@ -53,6 +73,8 @@ export interface AssessmentDetail {
   outro?: string;
   disclaimer: string;
   estimatedMinutes: number;
+  mode?: AssessmentMode;
+  totalQuestions?: number;
   questions: AssessmentQuestion[];
 }
 
@@ -64,12 +86,34 @@ export interface AssessmentAnswer {
 }
 
 export interface ResultSuggestion {
-  kind: 'game' | 'habit' | 'journal_prompt' | 'sleep_routine' | 'activity' | 'reflection' | 'breathing';
+  kind: 'game' | 'habit' | 'journal_prompt' | 'sleep_routine' | 'activity' | 'reflection' | 'breathing' | 'soundscape';
   code: string;
   title: string;
   description: string;
   explanation: string;
   estimatedMinutes: number;
+}
+
+export interface CategoryStatMeta {
+  id: AssessmentCategory;
+  title: string;
+  description: string;
+  targetCount: number;
+  actualCount: number;
+  themeColor: string;
+  iconName: string;
+  defaultMinutes: {
+    quick: number;
+    standard: number;
+    detailed: number;
+  };
+}
+
+export interface AssessmentStatsSummary {
+  totalQuestions: number;
+  categoriesCount: number;
+  categories: CategoryStatMeta[];
+  modes: AssessmentMode[];
 }
 
 export interface PlanDay {
