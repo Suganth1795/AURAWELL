@@ -21,11 +21,9 @@
     "noUncheckedSideEffectImports": true,
     "exactOptionalPropertyTypes": false,
 
-    "baseUrl": ".",
-    "types": ["vitest/globals", "@testing-library/jest-dom"],
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "tests"]
+  "include": ["src"]
 }
