@@ -28,13 +28,21 @@ export const csrfMiddleware: RequestHandler = (req, res, next) => {
     });
   }
 
+  res.set('x-csrf-token', token);
+
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
     next();
     return;
   }
 
+  const isAuthBootstrap =
+    req.path === '/auth/login' ||
+    req.path === '/auth/register' ||
+    req.path === '/api/auth/login' ||
+    req.path === '/api/auth/register';
+
   const header = req.get(CSRF_HEADER);
-  if (!header || !token || header !== token) {
+  if (!isAuthBootstrap && (!header || !token || header !== token)) {
     res.status(403).json({
       error: { message: 'Invalid or missing CSRF token', code: 'csrf_invalid' },
     });

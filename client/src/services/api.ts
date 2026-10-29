@@ -28,9 +28,11 @@ export function setUnauthorizedHandler(handler: (() => void) | null): void {
   onUnauthorized = handler;
 }
 
+let memoryCsrfToken = '';
+
 function csrfToken(): string {
   const match = document.cookie.match(/(?:^|;\s*)aurawell_csrf=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : '';
+  return match ? decodeURIComponent(match[1]) : memoryCsrfToken;
 }
 
 async function request<T>(
@@ -41,7 +43,8 @@ async function request<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
-  if (method !== 'GET') headers['X-CSRF-Token'] = csrfToken();
+  const token = csrfToken();
+  if (method !== 'GET' && token) headers['X-CSRF-Token'] = token;
 
   let response: Response;
   try {
@@ -51,6 +54,8 @@ async function request<T>(
       credentials: 'include',
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
+    const headerCsrf = response.headers.get('x-csrf-token');
+    if (headerCsrf) memoryCsrfToken = headerCsrf;
   } catch {
     throw new ApiError(0, 'Could not reach the server. Check your connection.', 'network_error');
   }

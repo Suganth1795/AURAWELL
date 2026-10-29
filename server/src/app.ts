@@ -38,8 +38,20 @@ export function createApp() {
 
   app.use(
     cors({
-      origin: allowedOrigins,
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (
+          allowedOrigins.includes('*') ||
+          allowedOrigins.includes(origin) ||
+          origin.endsWith('.vercel.app') ||
+          origin.includes('localhost')
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, true);
+      },
       credentials: true,
+      exposedHeaders: ['x-csrf-token'],
     }),
   );
 

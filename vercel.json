@@ -1,11 +1,8 @@
 {
-  "buildCommand": "npm run build -w client",
-  "outputDirectory": "client/dist",
-  "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://aurawell-ai.onrender.com/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://aurawell-backend.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
